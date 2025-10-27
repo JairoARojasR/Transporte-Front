@@ -1,4 +1,3 @@
-// src/app/dashboard/layout.tsx
 'use client';
 
 import { ReactNode, useEffect, useState } from "react";
@@ -13,10 +12,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     let mounted = true;
     (async () => {
       try {
-        await verificarSesion();     // 👈 consulta al backend
-        if (mounted) setReady(true); // OK, mostrar dashboard
+        await verificarSesion();     
+        if (mounted) setReady(true); 
       } catch {
-        // No autenticado → al login
         router.replace("/login");
       }
     })();

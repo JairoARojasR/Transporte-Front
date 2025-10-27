@@ -33,7 +33,7 @@ export async function cerrarSesion() {
 
 
 export async function verificarSesion() {
-  const res = await fetch(`${API}/me`, {
+  const res = await fetch(`${URL}/me`, {
     method: "GET",
     credentials: "include", 
   });
