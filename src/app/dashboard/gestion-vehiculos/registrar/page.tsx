@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { crearVehiculo, type CrearVehiculo, type ConductorAsignado } from "@/lib/vehiculos/vehiculoApi"
+import { crearVehiculo, type Vehiculo, type ConductorAsignado } from "@/lib/vehiculos/vehiculoApi"
 import { obtenerConductores, type DatosConductor } from "@/lib/usuario/usuario"
 import { useRouter } from "next/navigation"
 import { Truck, Calendar, Gauge, Users } from "lucide-react"
@@ -19,7 +19,7 @@ export default function CrearVehiculoPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [conductores, setConductores] = useState<DatosConductor[]>([])
   const [isLoadingConductores, setIsLoadingConductores] = useState(true)
-  const [formData, setFormData] = useState<CrearVehiculo>({
+  const [formData, setFormData] = useState<Vehiculo>({
     placa: "",
     tipo_vehiculo: undefined,
     capacidad: null,
@@ -70,7 +70,7 @@ export default function CrearVehiculoPage() {
         })
       }
 
-      const dataToSend: CrearVehiculo = {
+      const dataToSend: Vehiculo = {
         ...formData,
         conductores,
       }
@@ -79,7 +79,7 @@ export default function CrearVehiculoPage() {
 
       // Redirigir o mostrar mensaje de éxito
       toast.success("Vehículo creado exitosamente")
-      //router.push("/")
+      router.push("/dashboard/gestion-vehiculos")
     } catch (error) {
       console.error("Error creating vehicle:", error)
       toast.error(error instanceof Error ? error.message : "Error al crear el vehículo")
@@ -120,7 +120,7 @@ export default function CrearVehiculoPage() {
                     value={formData.placa}
                     onChange={(e) => setFormData({ ...formData, placa: e.target.value.toUpperCase() })}
                     required
-                    className="h-11 text-base"
+                    className="text-base py-5"
                   />
                 </div>
 
@@ -133,11 +133,11 @@ export default function CrearVehiculoPage() {
                     onValueChange={(value) =>
                       setFormData({
                         ...formData,
-                        tipo_vehiculo: value as CrearVehiculo["tipo_vehiculo"],
+                        tipo_vehiculo: value as Vehiculo["tipo_vehiculo"],
                       })
                     }
                   >
-                    <SelectTrigger id="tipo_vehiculo" className="h-11 text-base">
+                    <SelectTrigger id="tipo_vehiculo" className="text-base w-full py-5">
                       <SelectValue placeholder="Seleccionar tipo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -165,7 +165,7 @@ export default function CrearVehiculoPage() {
                           capacidad: e.target.value ? Number.parseFloat(e.target.value) : null,
                         })
                       }
-                      className="h-11 text-base"
+                      className="py-5 text-base"
                     />
                   </div>
                 </div>
@@ -187,7 +187,7 @@ export default function CrearVehiculoPage() {
                           odometro: e.target.value ? Number.parseFloat(e.target.value) : null,
                         })
                       }
-                      className="h-11 pl-10 text-base"
+                      className="py-5 pl-10 text-base"
                     />
                   </div>
                 </div>
@@ -201,11 +201,11 @@ export default function CrearVehiculoPage() {
                     onValueChange={(value) =>
                       setFormData({
                         ...formData,
-                        estado: value as CrearVehiculo["estado"],
+                        estado: value as Vehiculo["estado"],
                       })
                     }
                   >
-                    <SelectTrigger id="estado" className="h-11 text-base">
+                    <SelectTrigger id="estado" className="h-11 text-base w-full py-5">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -232,7 +232,7 @@ export default function CrearVehiculoPage() {
                           fecha_ultimo_mantenimiento: e.target.value || null,
                         })
                       }
-                      className="h-11 pl-10 text-base"
+                      className="py-5 pl-10 text-base"
                     />
                   </div>
                 </div>
@@ -256,7 +256,7 @@ export default function CrearVehiculoPage() {
                       onValueChange={setConductorHabitual}
                       disabled={isLoadingConductores}
                     >
-                      <SelectTrigger id="conductor_habitual" className="h-11 text-base">
+                      <SelectTrigger id="conductor_habitual" className="py-5 text-base w-full">
                         <SelectValue placeholder={isLoadingConductores ? "Cargando..." : "Sin Asignar"} />
                       </SelectTrigger>
                       <SelectContent>
@@ -279,7 +279,7 @@ export default function CrearVehiculoPage() {
                       onValueChange={setConductorEventual}
                       disabled={isLoadingConductores}
                     >
-                      <SelectTrigger id="conductor_eventual" className="h-11 text-base">
+                      <SelectTrigger id="conductor_eventual" className="py-5 text-base w-full">
                         <SelectValue placeholder={isLoadingConductores ? "Cargando..." : "Sin Asignar"} />
                       </SelectTrigger>
                       <SelectContent>
@@ -301,7 +301,7 @@ export default function CrearVehiculoPage() {
                   type="button"
                   variant="outline"
                   size="lg"
-                  onClick={() => router.push("/")}
+                  onClick={() => router.push("/dashboard/gestion-vehiculos")}
                   disabled={isLoading}
                   className="h-12 text-base font-semibold"
                 >
