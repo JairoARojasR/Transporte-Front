@@ -50,11 +50,33 @@ export async function obtenerVehiculos(): Promise<Vehiculo[]> {
 }
 
 
-export async function obtenerVehiculoPorPlaca(placa: string) {
+export async function obtenerVehiculoPorPlaca(placa: string): Promise<Vehiculo[]> {
     const res = await fetch(`${URL}/obtenerVehiculo/${placa}`, {
         credentials: "include",
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data?.error || "Error al obtener vehiculo");
-    return data;
+    return data as Vehiculo[];
 }
+
+export async function editarVehiculoPorPlaca(placa: string, payload: Vehiculo): Promise<Vehiculo> {
+    const res = await fetch(`${URL}/editarVehiculo/${placa}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Error al editar el vehículo");
+    return data as Vehiculo;
+}
+
+export const actualizarActividad = async (id: string, datos: any) => {
+    const res = await fetch(`${URL}/${id}`, {
+        method: "PUT",
+        body: datos,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al actualizar la actividad");
+    return data;
+};
