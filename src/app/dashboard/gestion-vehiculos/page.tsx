@@ -264,7 +264,7 @@ export default function GestionVehiculos() {
                               </DropdownMenuItem>
                             </Link>
                             <Link
-                              href={`/dashboard/gestion-vehiculos/editar/${vehiculo.placa}`}
+                              href={`/dashboard/gestion-vehiculos/editarv/${vehiculo.placa}`}
                             >
                               <DropdownMenuItem className="cursor-pointer">
                                 <Pencil className="w-4 h-4 mr-2" />
@@ -330,10 +330,14 @@ export default function GestionVehiculos() {
                             Ver Detalle
                           </DropdownMenuItem>
                         </Link>
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Pencil className="w-4 h-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
+                        <Link
+                          href={`/dashboard/gestion-vehiculos/editarv/${vehiculo.placa}`}
+                        >
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                        </Link>
                         <DropdownMenuItem className="cursor-pointer text-red-600">
                           <Trash2 className="w-4 h-4 mr-2" />
                           Eliminar
