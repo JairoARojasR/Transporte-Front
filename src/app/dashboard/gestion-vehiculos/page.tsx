@@ -205,13 +205,13 @@ export default function GestionVehiculos() {
                         {obtenerCapacidadLabel(vehiculo.capacidad)}
                       </td>
                       <td className="py-4 px-6">
-                        <div className="flex flex-col gap-1">
+                        <div className="flex gap-1">
                           <span className="text-slate-900">
                             {conductorHabitual
                               ? obtenerNombreConductor(
                                   conductorHabitual.cedula_conductor
                                 )
-                              : "Sin asignar"}
+                              : "Sin asignar habitual"}
                           </span>
                           {conductorHabitual && (
                             <Badge
@@ -222,18 +222,24 @@ export default function GestionVehiculos() {
                             </Badge>
                           )}
                         </div>
-                        {/* <div className="flex flex-col gap-1">
+
+                        <div className="flex gap-1 mt-2">
                           <span className="text-slate-900">
                             {conductorEventual
-                              ? obtenerNombreConductor(conductorEventual.cedula_conductor)
-                              : "Sin asignar"}
+                              ? obtenerNombreConductor(
+                                  conductorEventual.cedula_conductor
+                                )
+                              : "Sin asignar eventual"}
                           </span>
-                          {conductorHabitual && (
-                            <Badge variant="outline" className="w-fit text-xs bg-orange-50 text-orange-700 border-orange-200">
+                          {conductorEventual && (
+                            <Badge
+                              variant="outline"
+                              className="w-fit text-xs bg-orange-50 text-orange-700 border-orange-200"
+                            >
                               Eventual
                             </Badge>
                           )}
-                        </div> */}
+                        </div>
                       </td>
                       <td className="py-4 px-6">
                         <Badge
@@ -291,6 +297,9 @@ export default function GestionVehiculos() {
             {vehiculos.map((vehiculo) => {
               const conductorHabitual = vehiculo.conductores?.find(
                 (c) => c.tipo_conductor === "habitual"
+              );
+              const conductorEventual = vehiculo.conductores?.find(
+                (c) => c.tipo_conductor === "eventual"
               );
               return (
                 <div
@@ -355,22 +364,42 @@ export default function GestionVehiculos() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">Conductor:</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-900">
-                          {conductorHabitual
-                            ? obtenerNombreConductor(
-                                conductorHabitual.cedula_conductor
-                              )
-                            : "Sin asignar"}
-                        </span>
-                        {conductorHabitual && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                          >
-                            Habitual
-                          </Badge>
-                        )}
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-900">
+                            {conductorHabitual
+                              ? obtenerNombreConductor(
+                                  conductorHabitual.cedula_conductor
+                                )
+                              : "Sin asignar habitual"}
+                          </span>
+                          {conductorHabitual && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                            >
+                              Habitual
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-900">
+                            {conductorEventual
+                              ? obtenerNombreConductor(
+                                  conductorEventual.cedula_conductor
+                                )
+                              : "Sin asignar habitual"}
+                          </span>
+                          {conductorEventual && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs bg-orange-50 text-orange-700 border-orange-200"
+                            >
+                              Eventual
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">

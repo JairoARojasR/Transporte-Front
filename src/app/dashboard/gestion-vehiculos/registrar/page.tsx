@@ -36,6 +36,7 @@ export default function CrearVehiculoPage() {
     const fetchConductores = async () => {
       try {
         const data = await obtenerConductores()
+        console.log("info conductores", data)
         setConductores(data)
       } catch (error) {
         console.error("Error fetching conductores:", error)
@@ -77,7 +78,6 @@ export default function CrearVehiculoPage() {
 
       await crearVehiculo(dataToSend)
 
-      // Redirigir o mostrar mensaje de éxito
       toast.success("Vehículo creado exitosamente")
       router.push("/dashboard/gestion-vehiculos")
     } catch (error) {
@@ -157,6 +157,7 @@ export default function CrearVehiculoPage() {
                     <Input
                       id="capacidad"
                       type="number"
+                      min={1}
                       placeholder="10"
                       value={formData.capacidad ?? ""}
                       onChange={(e) =>
@@ -178,6 +179,7 @@ export default function CrearVehiculoPage() {
                     <Gauge className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       id="odometro"
+                      min={1}
                       type="number"
                       placeholder="125000"
                       value={formData.odometro ?? ""}
@@ -308,6 +310,7 @@ export default function CrearVehiculoPage() {
                   Cancelar
                 </Button>
                 <Button
+                variant={"register"}
                   type="submit"
                   size="lg"
                   disabled={isLoading || !formData.placa}

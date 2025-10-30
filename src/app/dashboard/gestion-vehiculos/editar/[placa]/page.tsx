@@ -1,491 +1,414 @@
 "use client";
 
-import type React from "react";
-
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { obtenerVehiculos, type Vehiculo } from "@/lib/vehiculos/vehiculoApi";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  obtenerVehiculoPorPlaca,
-  editarVehiculoPorPlaca,
-  type Vehiculo,
-  type ConductorAsignado,
-} from "@/lib/vehiculos/vehiculoApi";
-import { obtenerConductores, type DatosConductor } from "@/lib/usuario/usuario";
-import { useParams, useRouter } from "next/navigation";
-import { Truck, Calendar, Gauge, Users } from "lucide-react";
-import { toast } from "sonner";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Truck, MoreVertical, Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import Link from "next/link";
 
-export default function EditarVehiculoPage() {
-  const router = useRouter();
-  const { placa } = useParams();
-  const placaVehiculo = Array.isArray(placa) ? placa[0] : placa;
-  const [isLoading, setIsLoading] = useState(false);
-  const [conductores, setConductores] = useState<DatosConductor[]>([]);
-  const [isLoadingConductores, setIsLoadingConductores] = useState(true);
-  const [formData, setFormData] = useState<Vehiculo>({
-    placa: "",
-    tipo_vehiculo: undefined,
-    capacidad: null,
-    odometro: null,
-    estado: "disponible",
-    fecha_ultimo_mantenimiento: null,
-    conductores: [
-      {
-        cedula_conductor: 0,
-        tipo_conductor: "habitual",
-        usuario: {
-          cedula: 0,
-          nombre: "",
-        },
-      },
-    ],
-  });
-
-  const [conductorHabitual, setConductorHabitual] = useState<string>("");
-  const [conductorEventual, setConductorEventual] = useState<string>("");
-  
+export default function GestionVehiculos() {
+  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    async function cargarDatos() {
       try {
-        // Ensure we have a placa string before calling the API
-        if (!placaVehiculo) {
-          console.warn("Placa no proporcionada en la ruta");
-          toast.error("Placa del vehículo no encontrada");
-          return;
-        }
-
-        // Fetch vehicle data
-        const vehiculoData = await obtenerVehiculoPorPlaca(placaVehiculo);
-        console.log("Vehículo data:", vehiculoData);
-        if (vehiculoData && vehiculoData.length > 0) {
-          const vehiculo = vehiculoData[0];
-          setFormData(vehiculo);
-
-          // Set conductores from vehicle data
-
-          
-
-          const habitual = vehiculo.conductores?.find(
-            (c) => c.tipo_conductor === "habitual"
-          );
-          const eventual = vehiculo.conductores?.find(
-            (c) => c.tipo_conductor === "eventual"
-          );
-
-          const h = vehiculo.conductores?.map((c) => {
-            c.usuario?.nombre
-          })
-
-          if (habitual) {
-            setConductorHabitual(habitual.cedula_conductor.toString() || "");
-          }
-          if (eventual) {
-            setConductorEventual(eventual.cedula_conductor.toString() || "");
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching vehicle:", error);
-        toast.error("Error al cargar los datos del vehículo");
-      }
-    };
-
-    const fetchConductores = async () => {
-      try {
-        const data = await obtenerConductores();
-        setConductores(data);
-      } catch (error) {
-        console.error("Error fetching conductores:", error);
-        toast.error("Error al cargar la lista de conductores");
+        setLoading(true);
+        const vehiculosData = await obtenerVehiculos();
+        console.log("info", vehiculosData);
+        setVehiculos(vehiculosData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al cargar datos");
       } finally {
-        setIsLoadingConductores(false);
+        setLoading(false);
       }
-    };
+    }
+    cargarDatos();
+  }, []);
 
-    fetchData();
-    fetchConductores();
-  }, [placa]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      if (!placaVehiculo) {
-        console.warn("Placa no proporcionada en la ruta");
-        toast.error("Placa del vehículo no encontrada");
-        return;
-      }
-      // Construir array de conductores
-      const conductores: ConductorAsignado[] = [];
-
-      if (conductorHabitual && conductorHabitual !== "none") {
-        conductores.push({
-          cedula_conductor: Number.parseInt(conductorHabitual),
-          tipo_conductor: "habitual",
-        });
-      }
-
-      if (conductorEventual && conductorEventual !== "none") {
-        conductores.push({
-          cedula_conductor: Number.parseInt(conductorEventual),
-          tipo_conductor: "eventual",
-        });
-      }
-
-      const dataToSend: Vehiculo = {
-        ...formData,
-        conductores,
-      };
-
-      await editarVehiculoPorPlaca(placaVehiculo, dataToSend);
-
-      toast.success("Vehículo actualizado exitosamente");
-      router.push("/dashboard/gestion-vehiculos");
-    } catch (error) {
-      console.error("Error updating vehicle:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Error al actualizar el vehículo"
+  const obtenerNombreConductor = (cedula: number) => {
+    for (const vehiculo of vehiculos) {
+      const conductor = vehiculo.conductores?.find(
+        (c) => c.cedula_conductor === cedula
       );
-    } finally {
-      setIsLoading(false);
+      if (conductor) {
+        return conductor.usuario?.nombre;
+      }
+    }
+    return "Sin asignar";
+  };
+
+  const obtenerEstadoLabel = (estado?: string) => {
+    switch (estado) {
+      case "disponible":
+        return "Activo";
+      case "no_disponible":
+        return "No Disponible";
+      case "asignado":
+        return "Asignado";
+      default:
+        return "Desconocido";
     }
   };
 
-  function formatDateForInput(date: string | null): string {
-    if (!date) return "";
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return "";
-    return d.toISOString().slice(0, 10);
+  const obtenerEstadoColor = (estado?: string) => {
+    switch (estado) {
+      case "disponible":
+        return "bg-green-100 text-green-700 border-green-200";
+      case "no_disponible":
+        return "bg-orange-100 text-orange-700 border-orange-200";
+      case "asignado":
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
+  const obtenerTipoLabel = (tipo?: string) => {
+    switch (tipo) {
+      case "camion":
+        return "Camión";
+      case "camioneta":
+        return "Camioneta";
+      case "carrotanque":
+        return "Carrotanque";
+      case "retroexcavadora":
+        return "Retroexcavadora";
+      default:
+        return "N/A";
+    }
+  };
+
+  const obtenerCapacidadLabel = (capacidad?: number | null) => {
+    if (!capacidad) return "N/A";
+    return `${capacidad} Pasajeros`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Cargando vehículos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8 flex items-center justify-center">
+        <Card className="p-6 max-w-md">
+          <p className="text-red-600 text-center">{error}</p>
+        </Card>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background py-8 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <Truck className="h-8 w-8 text-primary" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+                Gestión de Vehículos
+              </h1>
+              <p className="text-slate-600">
+                Administra la flota de vehículos para el transporte de los
+                empleados.
+              </p>
+            </div>
+            <Link href="/dashboard/gestion-vehiculos/registrar">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Nuevo Vehículo
+              </Button>
+            </Link>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            Editar Vehículo
-          </h1>
-          <p className="mt-2 text-lg text-muted-foreground">
-            Edita un vehículo en el sistema
-          </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <Card className="border-2 shadow-xl">
-            <CardHeader className="space-y-1 pb-6">
-              <CardTitle className="text-2xl">
-                Información del Vehículo
-              </CardTitle>
-              <CardDescription className="text-base">
-                Completa todos los campos requeridos para registrar el vehículo.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8">
-              {/* Información básica */}
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="placa" className="text-base font-semibold">
-                    Placa <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="placa"
-                    placeholder="Ej. ABC-652"
-                    value={formData.placa}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        placa: e.target.value.toUpperCase(),
-                      })
-                    }
-                    required
-                    className="text-base py-5"
-                  />
-                </div>
+        {/* Lista de Vehículos */}
+        <Card className="shadow-xl border-0 overflow-hidden">
+          <div className="p-6 border-b bg-white">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Lista de Vehículos
+            </h2>
+            <p className="text-sm text-slate-600 mt-1">
+              Administra la flota de vehículos para el transporte de los
+              empleados.
+            </p>
+          </div>
 
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="tipo_vehiculo"
-                    className="text-base font-semibold"
-                  >
-                    Tipo de Vehículo
-                  </Label>
-                  <Select
-                    value={formData.tipo_vehiculo ?? ""}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        tipo_vehiculo: value as Vehiculo["tipo_vehiculo"],
-                      })
-                    }
-                  >
-                    <SelectTrigger
-                      id="tipo_vehiculo"
-                      className="text-base w-full py-5"
-                    >
-                      <SelectValue placeholder="Seleccionar tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="camion">Camión</SelectItem>
-                      <SelectItem value="carrotanque">Carrotanque</SelectItem>
-                      <SelectItem value="camioneta">Camioneta</SelectItem>
-                      <SelectItem value="retroexcavadora">
-                        Retroexcavadora
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="capacidad"
-                    className="text-base font-semibold"
-                  >
-                    Capacidad Transporte
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="capacidad"
-                      type="number"
-                      placeholder="10"
-                      value={formData.capacidad ?? ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          capacidad: e.target.value
-                            ? Number.parseFloat(e.target.value)
-                            : null,
-                        })
-                      }
-                      className="py-5 text-base"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="odometro" className="text-base font-semibold">
-                    Odómetro (km)
-                  </Label>
-                  <div className="relative">
-                    <Gauge className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="odometro"
-                      type="number"
-                      placeholder="125000"
-                      value={formData.odometro ?? ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          odometro: e.target.value
-                            ? Number.parseFloat(e.target.value)
-                            : null,
-                        })
-                      }
-                      className="py-5 pl-10 text-base"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="estado" className="text-base font-semibold">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b">
+                <tr>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
+                    Vehículo
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
+                    Tipo
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
+                    Capacidad
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
+                    Conductor
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
                     Estado
-                  </Label>
-                  <Select
-                    value={formData.estado ?? ""}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        estado: value as Vehiculo["estado"],
-                      })
-                    }
-                  >
-                    <SelectTrigger
-                      id="estado"
-                      className="h-11 text-base w-full py-5"
+                  </th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100">
+                {vehiculos.map((vehiculo) => {
+                  const conductorHabitual = vehiculo.conductores?.find(
+                    (c) => c.tipo_conductor === "habitual"
+                  );
+                  const conductorEventual = vehiculo.conductores?.find(
+                    (c) => c.tipo_conductor === "eventual"
+                  );
+                  return (
+                    <tr
+                      key={vehiculo.placa}
+                      className="hover:bg-slate-50 transition-colors"
                     >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="disponible">Disponible</SelectItem>
-                      <SelectItem value="no_disponible">
-                        No Disponible
-                      </SelectItem>
-                      <SelectItem value="asignado">Asignado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="fecha_ultimo_mantenimiento"
-                    className="text-base font-semibold"
-                  >
-                    Último Mantenimiento
-                  </Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="fecha_ultimo_mantenimiento"
-                      type="date"
-                      value={formatDateForInput(
-                        formData.fecha_ultimo_mantenimiento ?? null
-                      )}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          fecha_ultimo_mantenimiento: e.target.value || null,
-                        })
-                      }
-                      className="py-5 pl-10 text-base"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Asignación de Conductores */}
-              <div className="space-y-4 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/30 p-6">
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  <h3 className="text-xl font-semibold">
-                    Asignación de Conductor
-                  </h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Asigna conductores al vehículo (opcional)
-                </p>
-
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="conductor_habitual"
-                      className="text-base font-medium"
-                    >
-                      Conductor Habitual
-                    </Label>
-                    <Select
-                      value={conductorHabitual}
-                      onValueChange={setConductorHabitual}
-                      disabled={isLoadingConductores}
-                    >
-                      <SelectTrigger
-                        id="conductor_habitual"
-                        className="py-5 text-base w-full"
-                      >
-                        <SelectValue
-                          placeholder={
-                            isLoadingConductores ? "Cargando..." : "Sin Asignar"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sin Asignar</SelectItem>
-                        {conductores.map((conductor) => (
-                          <SelectItem
-                            key={conductor.cedula}
-                            value={conductor.cedula.toString()}
-                          >
-                            {conductor.nombre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="conductor_eventual"
-                      className="text-base font-medium"
-                    >
-                      Conductor Eventual
-                    </Label>
-                    <Select
-                      value={conductorEventual}
-                      onValueChange={setConductorEventual}
-                      disabled={isLoadingConductores}
-                    >
-                      <SelectTrigger
-                        id="conductor_eventual"
-                        className="py-5 text-base w-full"
-                      >
-                        <SelectValue
-                          placeholder={
-                            isLoadingConductores ? "Cargando..." : "Sin Asignar"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sin Asignar</SelectItem>
-                        {conductores.map((conductor) => (
-                          <SelectItem
-                            key={conductor.cedula}
-                            value={conductor.cedula.toString()}
-                          >
-                            {conductor.nombre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <p>Nombre de conductores que estan en el registro</p>
-                    <div>
-                      {formData.conductores.map((conductor) => (
-                        <div key={conductor.cedula_conductor} className="mt-2">
-                          <span className="font-medium">{conductor.usuario?.nombre}</span>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <Truck className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <span className="font-semibold text-slate-900">
+                            {vehiculo.placa}
+                          </span>
                         </div>
-                      ))}
+                      </td>
+                      <td className="py-4 px-6 text-slate-700">
+                        {obtenerTipoLabel(vehiculo.tipo_vehiculo)}
+                      </td>
+                      <td className="py-4 px-6 text-slate-700">
+                        {obtenerCapacidadLabel(vehiculo.capacidad)}
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex gap-1">
+                          <span className="text-slate-900">
+                            {conductorHabitual
+                              ? obtenerNombreConductor(
+                                  conductorHabitual.cedula_conductor
+                                )
+                              : "Sin asignar habitual"}
+                          </span>
+                          {conductorHabitual && (
+                            <Badge
+                              variant="outline"
+                              className="w-fit text-xs bg-blue-50 text-blue-700 border-blue-200"
+                            >
+                              Habitual 
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex gap-1 mt-2">
+                          <span className="text-slate-900">
+                            {conductorEventual
+                              ? obtenerNombreConductor(
+                                  conductorEventual.cedula_conductor
+                                )
+                              : "Sin asignar eventual"}
+                          </span>
+                          {conductorEventual && (
+                            <Badge
+                              variant="outline"
+                              className="w-fit text-xs bg-orange-50 text-orange-700 border-orange-200"
+                            >
+                              Eventual
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <Badge
+                          variant="outline"
+                          className={`${obtenerEstadoColor(vehiculo.estado)}`}
+                        >
+                          {obtenerEstadoLabel(vehiculo.estado)}
+                        </Badge>
+                      </td>
+                      <td className="py-4 px-6">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <Link
+                              href={`/dashboard/gestion-vehiculos/ver/${vehiculo.placa}`}
+                            >
+                              <DropdownMenuItem className="cursor-pointer">
+                                <Eye className="w-4 h-4 mr-2" />
+                                Ver Detalle
+                              </DropdownMenuItem>
+                            </Link>
+                            <Link
+                              href={`/dashboard/gestion-vehiculos/editarv/${vehiculo.placa}`}
+                            >
+                              <DropdownMenuItem className="cursor-pointer">
+                                <Pencil className="w-4 h-4 mr-2" />
+                                Editar
+                              </DropdownMenuItem>
+                            </Link>
+
+                            <DropdownMenuItem className="cursor-pointer text-red-600">
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {vehiculos.map((vehiculo) => {
+              const conductorHabitual = vehiculo.conductores?.find(
+                (c) => c.tipo_conductor === "habitual"
+              );
+              const conductorEventual = vehiculo.conductores?.find(
+                (c) => c.tipo_conductor === "eventual"
+              );
+              return (
+                <div
+                  key={vehiculo.placa}
+                  className="p-4 bg-white hover:bg-slate-50"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Truck className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-900">
+                          {vehiculo.placa}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {obtenerTipoLabel(vehiculo.tipo_vehiculo)}
+                        </p>
+                      </div>
                     </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <Link
+                          href={`/dashboard/gestion-vehiculos/ver/${vehiculo.placa}`}
+                        >
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Eye className="w-4 h-4 mr-2" />
+                            Ver Detalle
+                          </DropdownMenuItem>
+                        </Link>
+                        <Link
+                          href={`/dashboard/gestion-vehiculos/editarv/${vehiculo.placa}`}
+                        >
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                        </Link>
+                        <DropdownMenuItem className="cursor-pointer text-red-600">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
 
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Capacidad:</span>
+                      <span className="text-slate-900">
+                        {obtenerCapacidadLabel(vehiculo.capacidad)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-600">Conductor:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-900">
+                          {conductorHabitual
+                            ? obtenerNombreConductor(
+                                conductorHabitual.cedula_conductor
+                              )
+                            : "Sin asignar"}
+                        </span>
+                        {conductorHabitual && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                          >
+                            Habitual 
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-600">Estado:</span>
+                      <Badge
+                        variant="outline"
+                        className={`${obtenerEstadoColor(vehiculo.estado)}`}
+                      >
+                        {obtenerEstadoLabel(vehiculo.estado)}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              );
+            })}
+          </div>
 
-              {/* Botones de acción */}
-              <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="lg"
-                  onClick={() => router.push("/dashboard/gestion-vehiculos")}
-                  disabled={isLoading}
-                  className="h-12 text-base font-semibold"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={isLoading || !formData.placa}
-                  className="h-12 text-base font-semibold"
-                >
-                  {isLoading ? "Guardando..." : "Editar Vehículo"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </form>
+          {vehiculos.length === 0 && (
+            <div className="p-12 text-center">
+              <Truck className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-600 mb-2">
+                No hay vehículos registrados
+              </p>
+              <p className="text-sm text-slate-500">
+                Comienza agregando tu primer vehículo
+              </p>
+            </div>
+          )}
+        </Card>
       </div>
     </div>
   );
