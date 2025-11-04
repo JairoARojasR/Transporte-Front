@@ -145,12 +145,12 @@ export default function DetalleVehiculo({ params }: PageProps) {
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Detalle del Vehículo</h1>
               <p className="text-slate-600">Información completa del vehículo {vehiculo.placa}</p>
             </div>
-            {/* <Link href={`/vehiculos/editar/${vehiculo.placa}`}>
+            <Link href={`/dashboard/gestion-vehiculos/editarv/${vehiculo.placa}`}>
               <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
                 <Pencil className="w-4 h-4 mr-2" />
                 Editar Vehículo
               </Button>
-            </Link> */}
+            </Link>
           </div>
         </div>
 

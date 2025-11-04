@@ -8,7 +8,14 @@ export interface Usuario {
     nombre: string,
 }
 
+export interface Vehiculo {
+    placa: string,
+    tipo_vehiculo: string,
+    estado: string
+}
+
 export interface Preoperacional {
+    id_inspeccion: number,
     placa_vehiculo: string
     cedula_conductor: number
     fecha: string
@@ -23,6 +30,7 @@ export interface Preoperacional {
     estado_frenos: Estado
     nivel_combustible: Combustible
     usuario?: Usuario
+    vehiculo?: Vehiculo
     observaciones: string
 }
 
@@ -37,8 +45,25 @@ export async function registrarPreoperacional(datos: Preoperacional) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-        throw new Error (data?.error || "Error al crear el registro preoperacional")
+        throw new Error(data?.error || "Error al crear el registro preoperacional")
     }
     return data;
 }
 
+export async function obtenerRegistros(): Promise<Preoperacional[]> {
+    const res = await fetch(`${URL}/obtenerRegistros`, {
+        credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Error al obtener vehiculos");
+    return data as Preoperacional[];
+}
+
+export async function obtenerRegistroPreoperacional(id: string): Promise<Preoperacional[]> {
+    const res = await fetch(`${URL}/obtenerRegistroInspeccion/${id}`, {
+        credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Error al obtener vehiculo");
+    return data as Preoperacional[];
+}
