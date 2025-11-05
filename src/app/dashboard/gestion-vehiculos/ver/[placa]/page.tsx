@@ -58,7 +58,7 @@ export default function DetalleVehiculo({ params }: PageProps) {
   const obtenerEstadoLabel = (estado?: string) => {
     switch (estado) {
       case "disponible":
-        return "Activo"
+        return "Disponible"
       case "no_disponible":
         return "No Disponible"
       case "asignado":

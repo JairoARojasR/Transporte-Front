@@ -42,11 +42,13 @@ export default function RegistroPreoperacionalPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
-  const [conductoresDisponibles, setConductoresDisponibles] = 
-  useState<ConductorAsignado[]>([]);
+  const [conductoresDisponibles, setConductoresDisponibles] = useState<
+    ConductorAsignado[]
+  >([]);
   const [loadingVehiculos, setLoadingVehiculos] = useState(true);
 
   const [formData, setFormData] = useState<Preoperacional>({
+    id_inspeccion: 0,
     placa_vehiculo: "",
     cedula_conductor: 0,
     fecha: new Date().toISOString().split("T")[0],
@@ -503,7 +505,12 @@ export default function RegistroPreoperacionalPage() {
                     id="observaciones"
                     placeholder="Ingrese observaciones adicionales..."
                     value={formData.observaciones}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, observaciones: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        observaciones: e.target.value,
+                      }))
+                    }
                     rows={4}
                   />
                 </div>

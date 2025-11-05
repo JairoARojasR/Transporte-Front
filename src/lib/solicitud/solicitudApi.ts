@@ -1,0 +1,61 @@
+const URL = "http://localhost:5000/api/solicitud";
+
+export type TipoLabor = "mantenimiento" | "reparacion" | "reunion" | "inspeccion_tecnica" | "emergencia" | "gestion_administrativa" | "otro";
+export type Prioridad = "baja" | "media" | "alta";
+export type Estado = "pendiente" | "asignada" | "aceptada" | "en_progreso" | "finalizada" | "cancelada" | "en_reasignacion";
+
+export interface Solicitud {
+    id_solicitud: number
+    cedula_solicitante: number
+    telefono: string
+    placa_vehiculo: string
+    cedula_conductor: number
+    fecha: string
+    hora: string
+    origen: string
+    destino: string
+    estado: Estado
+    tipo_labor: TipoLabor
+    prioridad: Prioridad
+    cantidad_pasajeros: number
+    equipo_o_carga: string
+    observaciones: string
+    hora_inicio_transporte: string
+    hora_fin_transporte: string
+    usuario_solicitud_cedula_solicitanteTousuario?: UsuarioSolicitudCedulaSolicitanteTousuario
+    usuario_solicitud_cedula_conductorTousuario?: UsuarioSolicitudCedulaConductorTousuario
+    vehiculo?: Vehiculo
+}
+
+export interface UsuarioSolicitudCedulaSolicitanteTousuario {
+    nombre: string
+    telefono: number
+    correo: string
+}
+
+export interface UsuarioSolicitudCedulaConductorTousuario {
+    nombre: string
+    telefono: number
+    correo: string
+}
+
+export interface Vehiculo {
+    tipo_vehiculo: string
+}
+
+export async function registrarSolicitud(datos: Solicitud) {
+    const res = await fetch(`${URL}/crearSolicitud`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+        throw new Error(data?.error || "Error al crear la solicitud");
+    }
+    return data;
+
+}

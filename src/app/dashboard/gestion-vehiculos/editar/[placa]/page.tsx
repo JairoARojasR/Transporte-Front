@@ -50,7 +50,7 @@ export default function GestionVehiculos() {
   const obtenerEstadoLabel = (estado?: string) => {
     switch (estado) {
       case "disponible":
-        return "Activo";
+        return "Disponible";
       case "no_disponible":
         return "No Disponible";
       case "asignado":

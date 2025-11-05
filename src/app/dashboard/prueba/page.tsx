@@ -5,13 +5,6 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,132 +14,195 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
-  registrarPreoperacional,
-  type Preoperacional,
-  type Estado,
-  type Combustible,
-} from "@/lib/preoperacional/preoperacional";
+  registrarSolicitud,
+  type TipoLabor,
+  type Prioridad,
+} from "@/lib/solicitud/solicitudApi";
 import {
-  obtenerVehiculos,
-  type Vehiculo,
-  type ConductorAsignado,
-} from "@/lib/vehiculos/vehiculoApi";
-import { Loader2 } from "lucide-react";
+  obtenerEmpleados,
+  obtenerConductores,
+  type DatosUsuario,
+} from "@/lib/usuario/usuario";
+import { obtenerVehiculos, type Vehiculo } from "@/lib/vehiculos/vehiculoApi";
 
-export default function RegistroPreoperacionalPage() {
+export default function SolicitudVehiculoPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [empleados, setEmpleados] = useState<DatosUsuario[]>([]);
+  const [conductores, setConductores] = useState<DatosUsuario[]>([]);
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
-  const [conductoresDisponibles, setConductoresDisponibles] = 
-  useState<ConductorAsignado[]>([]);
-  const [loadingVehiculos, setLoadingVehiculos] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
 
-  const [formData, setFormData] = useState<Preoperacional>({
+  const [formData, setFormData] = useState({
+    cedula_solicitante: "",
+    telefono: "",
     placa_vehiculo: "",
-    cedula_conductor: 0,
-    fecha: new Date().toISOString().split("T")[0],
-    descanso_adecuando: false,
-    consumo_alcohol: false,
-    medicamentos_que_afecten_conduccion: false,
-    condiciones_fisicas_mentales: false,
-    soat_vigente: false,
-    tecnico_mecanica: false,
-    estado_llantas: "bueno",
-    estado_luces: "bueno",
-    estado_frenos: "bueno",
-    nivel_combustible: "lleno",
+    cedula_conductor: "",
+    fecha: "",
+    hora: "",
+    cantidad_pasajeros: "",
+    origen: "",
+    destino: "",
+    tipo_labor: "" as TipoLabor,
+    prioridad: "" as Prioridad,
+    equipo_o_carga: "",
     observaciones: "",
   });
 
   useEffect(() => {
-    const cargarVehiculos = async () => {
+    const cargarDatos = async () => {
       try {
-        const data = await obtenerVehiculos();
-        setVehiculos(data);
+        const [empleadosData, conductoresData, vehiculosData] =
+          await Promise.all([
+            obtenerEmpleados(),
+            obtenerConductores(),
+            obtenerVehiculos(),
+          ]);
+        setEmpleados(empleadosData);
+        setConductores(conductoresData);
+        setVehiculos(vehiculosData);
       } catch (error) {
-        console.error("Error fetching vehiculos:", error);
-        toast.error("Error al cargar la lista de vehiculos");
+        toast.error(
+          error instanceof Error ? error.message : "Error al cargar los datos"
+        );
       } finally {
-        setLoadingVehiculos(false);
+        setLoadingData(false);
       }
     };
-    cargarVehiculos();
-  }, []);
+    cargarDatos();
+  }, [toast]);
 
-  const handleVehiculoChange = (placa: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      placa_vehiculo: placa,
-      cedula_conductor: 0,
-    }));
-
-    const vehiculoSeleccionado = vehiculos.find((v) => v.placa === placa);
-    if (vehiculoSeleccionado) {
-      setConductoresDisponibles(vehiculoSeleccionado.conductores || []);
-    } else {
-      setConductoresDisponibles([]);
-    }
+  const handleEmpleadoChange = (cedula: string) => {
+    const empleado = empleados.find((e) => e.cedula.toString() === cedula);
+    setFormData({
+      ...formData,
+      cedula_solicitante: cedula,
+      telefono: empleado?.telefono?.toString() || "",
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!formData.placa_vehiculo) {
-      toast.warning("Debe seleccionar un vehículo");
-      return;
-    }
-
-    if (!formData.cedula_conductor || formData.cedula_conductor === 0) {
-      toast.warning("Debe seleccionar un conductor");
-      return;
-    }
-
     setIsLoading(true);
+
     try {
-      await registrarPreoperacional(formData);
-      toast.success("Registro preoperacional creado exitosamente");
+      await registrarSolicitud({
+        cedula_solicitante: Number(formData.cedula_solicitante),
+        telefono: formData.telefono,
+        placa_vehiculo: formData.placa_vehiculo,
+        cedula_conductor: Number(formData.cedula_conductor),
+        fecha: formData.fecha,
+        hora: formData.hora,
+        origen: formData.origen,
+        destino: formData.destino,
+        tipo_labor: formData.tipo_labor,
+        prioridad: formData.prioridad,
+        cantidad_pasajeros: Number(formData.cantidad_pasajeros),
+        equipo_o_carga: formData.equipo_o_carga,
+        observaciones: formData.observaciones,
+        estado: "pendiente",
+        id_solicitud: 0,
+        hora_inicio_transporte: "",
+        hora_fin_transporte: "",
+      });
+
+      toast.success("solicitud creada");
+
       router.push("/dashboard");
     } catch (error) {
-      toast.error("Error al crear el registro");
+      toast.error("error al crear la solicitud");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (loadingVehiculos) {
+  if (loadingData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Cargando datos...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
+    <div className="container mx-auto py-8 px-4 max-w-3xl">
       <Card>
         <CardHeader>
-          <CardTitle>Registro Preoperacional</CardTitle>
+          <CardTitle className="text-2xl">Solicitud de Vehículo</CardTitle>
           <CardDescription>
-            Complete el formulario de inspección preoperacional del vehículo
+            Complete el formulario para solicitar un vehículo
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Información básica */}
-            <div className="grid gap-4 md:grid-cols-2">
+            {/* Información del Solicitante */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">
+                Información del Solicitante
+              </h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="empleado">Empleado *</Label>
+                <Select
+                  value={formData.cedula_solicitante}
+                  onValueChange={handleEmpleadoChange}
+                  required
+                >
+                  <SelectTrigger id="empleado">
+                    <SelectValue placeholder="Seleccione un empleado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {empleados.map((empleado) => (
+                      <SelectItem
+                        key={empleado.cedula}
+                        value={empleado.cedula.toString()}
+                      >
+                        {empleado.nombre} - {empleado.cedula}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="telefono">Teléfono</Label>
+                <Input
+                  id="telefono"
+                  type="tel"
+                  value={formData.telefono}
+                  readOnly
+                  className="bg-muted"
+                />
+              </div>
+            </div>
+
+            {/* Información del Vehículo y Conductor */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Asignación de Vehículo</h3>
+
               <div className="space-y-2">
                 <Label htmlFor="vehiculo">Vehículo *</Label>
                 <Select
                   value={formData.placa_vehiculo}
-                  onValueChange={handleVehiculoChange}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, placa_vehiculo: value })
+                  }
                   required
                 >
-                  <SelectTrigger id="vehiculo" className="w-full">
+                  <SelectTrigger id="vehiculo">
                     <SelectValue placeholder="Seleccione un vehículo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -162,366 +218,199 @@ export default function RegistroPreoperacionalPage() {
               <div className="space-y-2">
                 <Label htmlFor="conductor">Conductor *</Label>
                 <Select
-                  value={
-                    formData.cedula_conductor && formData.cedula_conductor !== 0
-                      ? formData.cedula_conductor.toString()
-                      : undefined
-                  }
+                  value={formData.cedula_conductor}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      cedula_conductor: Number.parseInt(value),
-                    }))
-                  }
-                  disabled={
-                    !formData.placa_vehiculo ||
-                    conductoresDisponibles.length === 0
+                    setFormData({ ...formData, cedula_conductor: value })
                   }
                   required
                 >
-                  <SelectTrigger id="conductor" className="w-full">
+                  <SelectTrigger id="conductor">
                     <SelectValue placeholder="Seleccione un conductor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {conductoresDisponibles.map((conductor) => (
+                    {conductores.map((conductor) => (
                       <SelectItem
-                        key={conductor.cedula_conductor}
-                        value={conductor.cedula_conductor.toString()}
+                        key={conductor.cedula}
+                        value={conductor.cedula.toString()}
                       >
-                        {conductor.usuario?.nombre ||
-                          conductor.cedula_conductor}{" "}
-                        ({conductor.tipo_conductor})
+                        {conductor.nombre} - {conductor.cedula}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            
+
+            {/* Detalles del Viaje */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Detalles del Viaje</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fecha">Fecha *</Label>
+                  <Input
+                    id="fecha"
+                    type="date"
+                    value={formData.fecha}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fecha: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="hora">Hora *</Label>
+                  <Input
+                    id="hora"
+                    type="time"
+                    value={formData.hora}
+                    onChange={(e) =>
+                      setFormData({ ...formData, hora: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+              </div>
 
               <div className="space-y-2">
-                <Label htmlFor="fecha">Fecha *</Label>
+                <Label htmlFor="pasajeros">Número de Pasajeros *</Label>
                 <Input
-                  id="fecha"
-                  type="date"
-                  value={formData.fecha}
+                  id="pasajeros"
+                  type="number"
+                  min="1"
+                  value={formData.cantidad_pasajeros}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, fecha: e.target.value }))
+                    setFormData({
+                      ...formData,
+                      cantidad_pasajeros: e.target.value,
+                    })
                   }
                   required
                 />
               </div>
-            </div>
 
-            {/* Estado de salud */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">
-                Estado de Salud del Conductor
-              </h3>
+              <div className="space-y-2">
+                <Label htmlFor="origen">Origen *</Label>
+                <Input
+                  id="origen"
+                  type="text"
+                  placeholder="Dirección de origen"
+                  value={formData.origen}
+                  onChange={(e) =>
+                    setFormData({ ...formData, origen: e.target.value })
+                  }
+                  required
+                />
+              </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="destino">Destino *</Label>
+                <Input
+                  id="destino"
+                  type="text"
+                  placeholder="Dirección de destino"
+                  value={formData.destino}
+                  onChange={(e) =>
+                    setFormData({ ...formData, destino: e.target.value })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>¿Tuvo descanso adecuado (mínimo 8 horas)? *</Label>
-                  <RadioGroup
-                    value={formData.descanso_adecuando ? "si" : "no"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        descanso_adecuando: value === "si",
-                      }))
+                  <Label htmlFor="tipo_labor">Tipo de Labor *</Label>
+                  <Select
+                    value={formData.tipo_labor}
+                    onValueChange={(value: TipoLabor) =>
+                      setFormData({ ...formData, tipo_labor: value })
                     }
+                    required
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="si" id="descanso-si" />
-                        <Label
-                          htmlFor="descanso-si"
-                          className="font-normal cursor-pointer"
-                        >
-                          Sí
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="descanso-no" />
-                        <Label
-                          htmlFor="descanso-no"
-                          className="font-normal cursor-pointer"
-                        >
-                          No
-                        </Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
+                    <SelectTrigger id="tipo_labor">
+                      <SelectValue placeholder="Seleccione tipo de labor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mantenimiento">
+                        Mantenimiento
+                      </SelectItem>
+                      <SelectItem value="reparacion">Reparación</SelectItem>
+                      <SelectItem value="reunion">Reunión</SelectItem>
+                      <SelectItem value="inspeccion_tecnica">
+                        Inspección Técnica
+                      </SelectItem>
+                      <SelectItem value="emergencia">Emergencia</SelectItem>
+                      <SelectItem value="gestion_administrativa">
+                        Gestión Administrativa
+                      </SelectItem>
+                      <SelectItem value="otro">Otro</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>
-                    ¿Ha consumido alcohol en las últimas 24 horas? *
-                  </Label>
-                  <RadioGroup
-                    value={formData.consumo_alcohol ? "si" : "no"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        consumo_alcohol: value === "si",
-                      }))
+                  <Label htmlFor="prioridad">Prioridad *</Label>
+                  <Select
+                    value={formData.prioridad}
+                    onValueChange={(value: Prioridad) =>
+                      setFormData({ ...formData, prioridad: value })
                     }
+                    required
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="si" id="alcohol-si" />
-                        <Label
-                          htmlFor="alcohol-si"
-                          className="font-normal cursor-pointer"
-                        >
-                          Sí
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="alcohol-no" />
-                        <Label
-                          htmlFor="alcohol-no"
-                          className="font-normal cursor-pointer"
-                        >
-                          No
-                        </Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
+                    <SelectTrigger id="prioridad">
+                      <SelectValue placeholder="Seleccione prioridad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="baja">Baja</SelectItem>
+                      <SelectItem value="media">Media</SelectItem>
+                      <SelectItem value="alta">Alta</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>
-                    ¿Está tomando medicamentos que afecten la conducción? *
-                  </Label>
-                  <RadioGroup
-                    value={
-                      formData.medicamentos_que_afecten_conduccion ? "si" : "no"
-                    }
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        medicamentos_que_afecten_conduccion: value === "si",
-                      }))
-                    }
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="si" id="medicamentos-si" />
-                        <Label
-                          htmlFor="medicamentos-si"
-                          className="font-normal cursor-pointer"
-                        >
-                          Sí
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="medicamentos-no" />
-                        <Label
-                          htmlFor="medicamentos-no"
-                          className="font-normal cursor-pointer"
-                        >
-                          No
-                        </Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="equipo">Carga o Equipo a Transportar</Label>
+                <Textarea
+                  id="equipo"
+                  placeholder="Describa la carga o equipo a transportar"
+                  value={formData.equipo_o_carga}
+                  onChange={(e) =>
+                    setFormData({ ...formData, equipo_o_carga: e.target.value })
+                  }
+                  rows={3}
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <Label>
-                    ¿Se encuentra en condiciones físicas y mentales para
-                    conducir? *
-                  </Label>
-                  <RadioGroup
-                    value={formData.condiciones_fisicas_mentales ? "si" : "no"}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        condiciones_fisicas_mentales: value === "si",
-                      }))
-                    }
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="si" id="condiciones-si" />
-                        <Label
-                          htmlFor="condiciones-si"
-                          className="font-normal cursor-pointer"
-                        >
-                          Sí
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="no" id="condiciones-no" />
-                        <Label
-                          htmlFor="condiciones-no"
-                          className="font-normal cursor-pointer"
-                        >
-                          No
-                        </Label>
-                      </div>
-                    </div>
-                  </RadioGroup>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="observaciones">Observaciones</Label>
+                <Textarea
+                  id="observaciones"
+                  placeholder="Observaciones adicionales"
+                  value={formData.observaciones}
+                  onChange={(e) =>
+                    setFormData({ ...formData, observaciones: e.target.value })
+                  }
+                  rows={3}
+                />
               </div>
             </div>
 
-            {/* Chequeo preventivo del vehículo */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">
-                Chequeo Preventivo del Vehículo
-              </h3>
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="soat"
-                    checked={formData.soat_vigente}
-                    onCheckedChange={(checked) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        soat_vigente: checked as boolean,
-                      }))
-                    }
-                  />
-                  <Label htmlFor="soat" className="font-normal cursor-pointer">
-                    SOAT vigente
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="tecnicomecanica"
-                    checked={formData.tecnico_mecanica}
-                    onCheckedChange={(checked) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        tecnico_mecanica: checked as boolean,
-                      }))
-                    }
-                  />
-                  <Label
-                    htmlFor="tecnicomecanica"
-                    className="font-normal cursor-pointer"
-                  >
-                    Revisión técnico-mecánica vigente
-                  </Label>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="estado-llantas">
-                    Estado de las llantas *
-                  </Label>
-                  <Select
-                    value={formData.estado_llantas}
-                    onValueChange={(value: Estado) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        estado_llantas: value,
-                      }))
-                    }
-                    required
-                  >
-                    <SelectTrigger id="estado-llantas" className="w-2xs">
-                      <SelectValue placeholder="Seleccione el estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bueno">Bueno</SelectItem>
-                      <SelectItem value="regular">Regular</SelectItem>
-                      <SelectItem value="malo">Malo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="estado-frenos">Estado de los frenos *</Label>
-                  <Select
-                    value={formData.estado_frenos}
-                    onValueChange={(value: Estado) =>
-                      setFormData((prev) => ({ ...prev, estado_frenos: value }))
-                    }
-                    required
-                  >
-                    <SelectTrigger id="estado-frenos" className="w-2xs">
-                      <SelectValue placeholder="Seleccione el estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bueno">Bueno</SelectItem>
-                      <SelectItem value="regular">Regular</SelectItem>
-                      <SelectItem value="malo">Malo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="estado-luces">Estado de las luces *</Label>
-                  <Select
-                    value={formData.estado_luces}
-                    onValueChange={(value: Estado) =>
-                      setFormData((prev) => ({ ...prev, estado_luces: value }))
-                    }
-                    required
-                  >
-                    <SelectTrigger id="estado-luces" className="w-2xs">
-                      <SelectValue placeholder="Seleccione el estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bueno">Bueno</SelectItem>
-                      <SelectItem value="regular">Regular</SelectItem>
-                      <SelectItem value="malo">Malo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nivel-combustible">
-                    Nivel de combustible *
-                  </Label>
-                  <Select
-                    value={formData.nivel_combustible}
-                    onValueChange={(value: Combustible) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        nivel_combustible: value,
-                      }))
-                    }
-                    required
-                  >
-                    <SelectTrigger id="nivel-combustible" className="w-2xs">
-                      <SelectValue placeholder="Seleccione el nivel" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lleno">Lleno</SelectItem>
-                      <SelectItem value="medio">Medio</SelectItem>
-                      <SelectItem value="bajo">Bajo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="observaciones">Observaciones</Label>
-                  <Textarea
-                    id="observaciones"
-                    placeholder="Ingrese observaciones adicionales..."
-                    value={formData.observaciones}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, observaciones: e.target.value }))}
-                    rows={4}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-4 justify-end">
+            <div className="flex gap-4 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
                 disabled={isLoading}
+                className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Registrar Preoperacional
+              <Button type="submit" disabled={isLoading} className="flex-1">
+                {isLoading ? "Registrando..." : "Registrar Solicitud"}
               </Button>
             </div>
           </form>

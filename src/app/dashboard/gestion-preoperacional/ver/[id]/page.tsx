@@ -23,6 +23,7 @@ import {
   CalendarCheck,
 } from "lucide-react";
 import Link from "next/link";
+import {obtenerEstadoColor, obtenerEstadoLabel, obtenerTipoLabel} from "@/componentsux/estadoVehiculo"
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -96,8 +97,8 @@ export default function DetalleInspeccionPreoperacional({ params }: PageProps) {
   }
 
   return (
-    <div>
-      <div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
+      <div className="max-w-5xl mx-auto">
         <div className="mb-6">
           <Button
             variant="outline"
@@ -111,7 +112,7 @@ export default function DetalleInspeccionPreoperacional({ params }: PageProps) {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-                Detalle del Vehículo
+                Detalle Inspección Preoperacional
               </h1>
               <p className="text-slate-600">
                 Información completa inspección preoperacional del conductor{" "}
@@ -127,13 +128,19 @@ export default function DetalleInspeccionPreoperacional({ params }: PageProps) {
           </div>
         </div>
 
-        <Card>
-            <div>
-                <div>
-                    <Truck></Truck>
-                    {preoperacional.placa_vehiculo}
-                </div>
+        {/* Vehicle Header Card */}
+        <Card className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Truck className="w-8 h-8 text-blue-600" />
             </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-slate-900">{preoperacional.placa_vehiculo}</h2>
+            </div>
+            <Badge variant="outline" className={`${obtenerEstadoColor(preoperacional.vehiculo?.estado)} text-sm px-3 py-1`}>
+              {obtenerEstadoLabel(preoperacional.vehiculo?.estado)}
+            </Badge>
+          </div>
         </Card>
       </div>
     </div>
