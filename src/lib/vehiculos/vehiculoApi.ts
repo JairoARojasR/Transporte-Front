@@ -13,6 +13,13 @@ export interface ConductorAsignado {
     tipo_conductor: TipoConductor;
     usuario?: Conductor;
 }
+
+export interface InspeccionPreoperacional {
+  placa_vehiculo: string
+  cedula_conductor: number
+  fecha: string
+  usuario: Conductor
+}
 export interface Vehiculo {
     placa: string;
     tipo_vehiculo?: TipoVehiculo;
@@ -21,6 +28,7 @@ export interface Vehiculo {
     estado?: EstadoVehiculo;
     fecha_ultimo_mantenimiento?: string | null;
     conductores: ConductorAsignado[];
+    inspeccion_preoperacional?: InspeccionPreoperacional[]
 }
 
 export async function crearVehiculo(datos: Vehiculo) {
@@ -49,6 +57,15 @@ export async function obtenerVehiculos(): Promise<Vehiculo[]> {
     return data as Vehiculo[];
 }
 
+export async function obtenerVehiculoPorRegistroInspeccion(): Promise<Vehiculo[]> {
+    const res = await fetch(`${URL}/obtenerVehiculosInspeccion`, {
+        credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Error al obtener vehiculos");
+    return data as Vehiculo[];
+}
+
 
 export async function obtenerVehiculoPorPlaca(placa: string): Promise<Vehiculo[]> {
     const res = await fetch(`${URL}/obtenerVehiculo/${placa}`, {
@@ -58,6 +75,7 @@ export async function obtenerVehiculoPorPlaca(placa: string): Promise<Vehiculo[]
     if (!res.ok) throw new Error(data?.error || "Error al obtener vehiculo");
     return data as Vehiculo[];
 }
+
 
 export async function editarVehiculoPorPlaca(placa: string, payload: Vehiculo): Promise<Vehiculo> {
     const res = await fetch(`${URL}/editarVehiculo/${placa}`, {

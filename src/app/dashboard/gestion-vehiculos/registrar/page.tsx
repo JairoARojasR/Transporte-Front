@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { crearVehiculo, type Vehiculo, type ConductorAsignado } from "@/lib/vehiculos/vehiculoApi"
-import { obtenerConductores, type DatosConductor } from "@/lib/usuario/usuario"
+import { obtenerConductores, type DatosUsuario } from "@/lib/usuario/usuario"
 import { useRouter } from "next/navigation"
 import { Truck, Calendar, Gauge, Users } from "lucide-react"
 import { toast } from "sonner"
@@ -17,7 +17,7 @@ import { toast } from "sonner"
 export default function CrearVehiculoPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [conductores, setConductores] = useState<DatosConductor[]>([])
+  const [conductores, setConductores] = useState<DatosUsuario[]>([])
   const [isLoadingConductores, setIsLoadingConductores] = useState(true)
   const [formData, setFormData] = useState<Vehiculo>({
     placa: "",

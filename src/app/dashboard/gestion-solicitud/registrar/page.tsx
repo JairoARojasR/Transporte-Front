@@ -37,6 +37,8 @@ import { obtenerEmpleados, type DatosUsuario } from "@/lib/usuario/usuario";
 import {
   registrarSolicitud,
   type Solicitud,
+  type TipoLabor,
+  type Prioridad,
 } from "@/lib/solicitud/solicitudApi";
 import { toast } from "sonner";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
@@ -327,6 +329,116 @@ export default function SolicitudVehiculoPage() {
                     />
                   </div>
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="tipo_labor">Tipo de Labor *</Label>
+                    <Select
+                      value={formData.tipo_labor}
+                      onValueChange={(value: TipoLabor) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          tipo_labor: value,
+                        }))
+                      }
+                      required
+                    >
+                      <SelectTrigger id="tipo_labor" className="w-full">
+                        <SelectValue placeholder="Seleccione tipo de labor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mantenimiento">
+                          Mantenimiento
+                        </SelectItem>
+                        <SelectItem value="reparacion">Reparación</SelectItem>
+                        <SelectItem value="reunion">Reunión</SelectItem>
+                        <SelectItem value="inspeccion_tecnica">
+                          Inspección Técnica
+                        </SelectItem>
+                        <SelectItem value="emergencia">Emergencia</SelectItem>
+                        <SelectItem value="gestion_administrativa">
+                          Gestión Administrativa
+                        </SelectItem>
+                        <SelectItem value="otro">Otro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="estado">Prioridad *</Label>
+                    <Select
+                      value={formData.prioridad}
+                      onValueChange={(value: Prioridad) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          prioridad: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger id="prioridad" className="w-full">
+                        <SelectValue placeholder="Seleccione prioridad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="baja">Baja</SelectItem>
+                        <SelectItem value="media">Media</SelectItem>
+                        <SelectItem value="alta">Alta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="equipo">Carga o Equipo a Transportar</Label>
+                  <Textarea
+                    id="equipo"
+                    placeholder="Describa la carga o equipo a transportar"
+                    value={formData.equipo_o_carga}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        equipo_o_carga: e.target.value,
+                      }))
+                    }
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="observaciones">Observaciones</Label>
+                  <Textarea
+                    id="observaciones"
+                    placeholder="Observaciones adicionales"
+                    value={formData.observaciones}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        observaciones: e.target.value,
+                      }))
+                    }
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4 justify-end mt-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                  disabled={isLoading}
+                >
+                  Cancelar
+                </Button>
+
+                <Button
+                  type="submit"
+                  variant="register"
+                  //onClick={() => router.back()}
+                  disabled={isLoading}
+                >
+                  {isLoading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Registrar Solicitud
+                </Button>
               </div>
             </div>
           </form>

@@ -59,3 +59,13 @@ export async function registrarSolicitud(datos: Solicitud) {
     return data;
 
 }
+
+export async function obtenerSolicitudes(): Promise<Solicitud[]> {
+    const res = await fetch(`${URL}/obtenerSolicitudes`, {
+        credentials: "include"
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Error al obtener Solicitudes");
+    return data as Solicitud[];
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { obtenerVehiculos, type Vehiculo } from "@/lib/vehiculos/vehiculoApi";
+import { obtenerVehiculos, obtenerVehiculoPorRegistroInspeccion, type Vehiculo } from "@/lib/vehiculos/vehiculoApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -16,6 +16,7 @@ import Link from "next/link";
 
 export default function GestionVehiculos() {
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
+  const [conductor, setConductor] = useState<Vehiculo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,6 +27,22 @@ export default function GestionVehiculos() {
         const vehiculosData = await obtenerVehiculos();
         console.log("info", vehiculosData);
         setVehiculos(vehiculosData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al cargar datos");
+      } finally {
+        setLoading(false);
+      }
+    }
+    cargarDatos();
+  }, []);
+
+  useEffect(() => {
+    async function cargarDatos() {
+      try {
+        setLoading(true);
+        const conductorData = await obtenerVehiculoPorRegistroInspeccion();
+        console.log("info conductor", conductorData);
+        setConductor(conductorData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al cargar datos");
       } finally {

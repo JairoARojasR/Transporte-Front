@@ -13,7 +13,7 @@ import {
   type Vehiculo,
   type ConductorAsignado,
 } from "@/lib/vehiculos/vehiculoApi"
-import { obtenerConductores, type DatosConductor } from "@/lib/usuario/usuario"
+import { obtenerConductores, type DatosUsuario } from "@/lib/usuario/usuario"
 import { useRouter, useParams } from "next/navigation"
 import { Truck, Calendar, Gauge, Users, ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
@@ -25,7 +25,7 @@ export default function EditarVehiculoPage() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
-  const [conductores, setConductores] = useState<DatosConductor[]>([])
+  const [conductores, setConductores] = useState<DatosUsuario[]>([])
   const [isLoadingConductores, setIsLoadingConductores] = useState(true)
   const [formData, setFormData] = useState<Vehiculo>({
     placa: "",
