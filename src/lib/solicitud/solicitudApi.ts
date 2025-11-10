@@ -5,23 +5,23 @@ export type Prioridad = "baja" | "media" | "alta";
 export type Estado = "pendiente" | "asignada" | "aceptada" | "en_progreso" | "finalizada" | "cancelada" | "en_reasignacion";
 
 export interface Solicitud {
-    id_solicitud: number
-    cedula_solicitante: number
-    telefono: string
-    placa_vehiculo: string
-    cedula_conductor: number
-    fecha: string
-    hora: string
-    origen: string
-    destino: string
-    estado: Estado
-    tipo_labor: TipoLabor
-    prioridad: Prioridad
-    cantidad_pasajeros: number
-    equipo_o_carga: string
-    observaciones: string
-    hora_inicio_transporte: string
-    hora_fin_transporte: string
+    id_solicitud?: number
+    cedula_solicitante?: number
+    telefono?: string
+    placa_vehiculo?: string
+    cedula_conductor?: number
+    fecha?: string
+    hora?: string
+    origen?: string
+    destino?: string
+    estado?: Estado
+    tipo_labor?: TipoLabor
+    prioridad?: Prioridad
+    cantidad_pasajeros?: number
+    equipo_o_carga?: string
+    observaciones?: string
+    hora_inicio_transporte?: string
+    hora_fin_transporte?: string
     usuario_solicitud_cedula_solicitanteTousuario?: UsuarioSolicitudCedulaSolicitanteTousuario
     usuario_solicitud_cedula_conductorTousuario?: UsuarioSolicitudCedulaConductorTousuario
     vehiculo?: Vehiculo
@@ -68,4 +68,26 @@ export async function obtenerSolicitudes(): Promise<Solicitud[]> {
     const data = await res.json();
     if (!res.ok) throw new Error(data?.error || "Error al obtener Solicitudes");
     return data as Solicitud[];
+}
+
+export async function editarSolicitudPorId(id_solicitud: string, payload: Solicitud): Promise<Solicitud> {
+    const res = await fetch(`${URL}/editarSolicitud/${id_solicitud}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Error al editar la solicitud");
+    return data as Solicitud;
+}
+
+
+export async function obtenerMisSolicitudesConductor(): Promise<Solicitud[]> {
+    const res = await fetch(`${URL}/misSolicitudes`,
+        { credentials: "include" });
+    if (res.status === 401 || res.status === 403) throw new Error("NO_AUTORIZADO");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Error al obtener solicitudes");
+    return data;
 }

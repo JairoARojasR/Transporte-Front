@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreVertical, Eye, Check, X, UserCheck, UserMinus } from "lucide-react";
+import { MoreVertical, Eye, Check, X } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -315,7 +315,7 @@ export default function GestionSolicitud() {
                               vehiculos.length === 0
                             }
                           >
-                            <SelectTrigger className="w-[230px]">
+                            <SelectTrigger className="w-[200px]">
                               <SelectValue
                                 placeholder={
                                   vehiculos.length === 0
@@ -330,7 +330,7 @@ export default function GestionSolicitud() {
                                   key={vehiculo.placa}
                                   value={vehiculo.placa}
                                 >
-                                  {vehiculo.placa} -{" "} {vehiculo.tipo_vehiculo} - {" "}
+                                  {vehiculo.placa} -{" "}
                                   {vehiculo.conductor_sugerido?.nombre ||
                                     "Sin conductor"}
                                 </SelectItem>
@@ -346,7 +346,7 @@ export default function GestionSolicitud() {
                         )}
                         {vehiculoAsignado && !asignacionActual && (
                           <div className="text-xs text-muted-foreground mt-1">
-                            {vehiculoAsignado.placa} {"-"} {vehiculoAsignado.tipo_vehiculo} asignado
+                            {vehiculoAsignado.placa} asignado
                           </div>
                         )}
                       </td>
@@ -361,7 +361,7 @@ export default function GestionSolicitud() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-8 w-8 p-0 border-green-500 cursor-pointer"
+                                className="h-8 w-8 p-0 border-green-500 text-green-600 hover:bg-green-50 bg-transparent"
                                 onClick={() =>
                                   handleConfirmarAsignacion(sol.id_solicitud!)
                                 }
@@ -369,12 +369,12 @@ export default function GestionSolicitud() {
                                   asignandoVehiculo === sol.id_solicitud
                                 }
                               >
-                                <UserCheck className="h-4 w-4 text-green-600" />
+                                <Check className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-8 w-8 p-0 border-red-500 cursor-pointer"
+                                className="h-8 w-8 p-0 border-red-500 text-red-600 hover:bg-red-50 bg-transparent"
                                 onClick={() =>
                                   handleCancelarAsignacion(sol.id_solicitud!)
                                 }
@@ -382,7 +382,7 @@ export default function GestionSolicitud() {
                                   asignandoVehiculo === sol.id_solicitud
                                 }
                               >
-                                <UserMinus className="h-4 w-4 text-red-600" />
+                                <X className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
@@ -400,7 +400,7 @@ export default function GestionSolicitud() {
 
                       <td className="py-4 px-6">
                         <div>
-                          {sol.hora_inicio_transporte ||
+                          {sol.hora_inicio_transporte &&
                           sol.hora_fin_transporte ? (
                             <>
                               {formatearHora(sol.hora_inicio_transporte)} -{" "}

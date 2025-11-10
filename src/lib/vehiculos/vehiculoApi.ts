@@ -15,10 +15,10 @@ export interface ConductorAsignado {
 }
 
 export interface InspeccionPreoperacional {
-  placa_vehiculo: string
-  cedula_conductor: number
-  fecha: string
-  usuario: Conductor
+    placa_vehiculo: string
+    cedula_conductor: number
+    fecha: string
+    usuario: Conductor
 }
 export interface Vehiculo {
     placa: string;
@@ -29,7 +29,15 @@ export interface Vehiculo {
     fecha_ultimo_mantenimiento?: string | null;
     conductores: ConductorAsignado[];
     inspeccion_preoperacional?: InspeccionPreoperacional[]
+    conductor_sugerido?: VehiculoConInspeccion
 }
+
+export interface VehiculoConInspeccion {
+    fuente: "inspeccion";
+    cedula: number;
+    nombre: string;
+}
+
 
 export async function crearVehiculo(datos: Vehiculo) {
     const res = await fetch(`${URL}/crearVehiculo`, {
@@ -89,12 +97,18 @@ export async function editarVehiculoPorPlaca(placa: string, payload: Vehiculo): 
     return data as Vehiculo;
 }
 
-export const actualizarActividad = async (id: string, datos: any) => {
-    const res = await fetch(`${URL}/${id}`, {
-        method: "PUT",
-        body: datos,
+
+export async function obtenerVehiculosPorInspeccionFecha(fecha: string): Promise<Vehiculo[]> {
+    const res = await fetch(`${URL}/obtenerInspeccion?fecha=${fecha}`, {
+        credentials: "include",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Error al actualizar la actividad");
-    return data;
-};
+
+    if (!res.ok) {
+        throw new Error(data?.error || "Error al obtener vehículos con inspección");
+    }
+
+    return data as Vehiculo[];
+}
+
+
