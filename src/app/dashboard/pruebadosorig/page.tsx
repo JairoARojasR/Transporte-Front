@@ -1,450 +1,238 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import { useState } from "react"
+import useSWR from "swr"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useToast } from "@/hooks/use-toast"
 import {
-  obtenerVehiculosPorInspeccionFecha,
-  type Vehiculo,
-} from "@/lib/vehiculos/vehiculoApi";
-import {
-  obtenerSolicitudes,
+  obtenerMisSolicitudesConductor,
   editarSolicitudPorId,
   type Solicitud,
-} from "@/lib/solicitud/solicitudApi";
+  type Estado,
+} from "@/lib/solicitud/solicitudApi"
+import { ObtenerPrioridadLabel, obtenerPrioridadColor, ObtenerTipoLaborLabel } from "@/components/ux/labels"
+import { Calendar, Clock, MapPin, Users, Car, Briefcase, Package, FileText, CheckCircle, XCircle } from "lucide-react"
 
-import { formatearFecha, formatearHora } from "@/componentsux/formatearFecha";
+const ESTADOS: { value: Estado; label: string }[] = [
+  { value: "asignada", label: "Asignadas" },
+  { value: "aceptada", label: "Aceptadas" },
+  { value: "en_progreso", label: "En Progreso" },
+  { value: "finalizada", label: "Finalizadas" },
+  { value: "cancelada", label: "Canceladas" },
+  { value: "en_reasignacion", label: "En Reasignación" },
+]
 
-import {
-  ObtenerPrioridadLabel,
-  obtenerPrioridadColor,
-  ObtenerEstadoSolicitudLabel,
-  obtenerEstadoSolicitudColor,
-} from "@/componentsux/estadoVehiculo";
+export default function MisSolicitudesPage() {
+  const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState<Estado>("asignada")
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MoreVertical, Eye, Check, X } from "lucide-react";
-import Link from "next/link";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+  const {
+    data: solicitudes = [],
+    isLoading,
+    mutate,
+  } = useSWR("mis-solicitudes-conductor", obtenerMisSolicitudesConductor, {
+    refreshInterval: 10000,
+    revalidateOnFocus: true,
+  })
 
-export default function GestionSolicitud() {
-  const [solicitud, setSolicitud] = useState<Solicitud[]>([]);
-  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [asignandoVehiculo, setAsignandoVehiculo] = useState<number | null>(
-    null
-  );
-  const [asignacionPendiente, setAsignacionPendiente] = useState<{
-    [key: number]: {
-      placa: string;
-      nombreConductor: string;
-      cedulaConductor: number;
-    };
-  }>({});
-
-  useEffect(() => {
-    async function cargarDatos() {
-      try {
-        setLoading(true);
-        const solicitudData = await obtenerSolicitudes();
-        setSolicitud(solicitudData);
-      } catch (error) {
-        setError(
-          error instanceof Error ? error.message : "Error al cargar datos"
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-    cargarDatos();
-  }, []);
-
-  useEffect(() => {
-    async function cargarVehiculos() {
-      try {
-        const fechaHoy = new Date().toISOString().split("T")[0];
-        const data = await obtenerVehiculosPorInspeccionFecha(fechaHoy);
-        setVehiculos(data);
-      } catch (error) {
-        console.error("Error al cargar vehículos:", error);
-      }
-    }
-    cargarVehiculos();
-  }, []);
-
-  const handleSeleccionarVehiculo = (
-    idSolicitud: number,
-    placaVehiculo: string,
-    nombreConductor: string,
-    cedulaConductor: number
-  ) => {
-    setAsignacionPendiente({
-      ...asignacionPendiente,
-      [idSolicitud]: { placa: placaVehiculo, nombreConductor, cedulaConductor },
-    });
-  };
-
-  const handleConfirmarAsignacion = async (idSolicitud: number) => {
-    const asignacion = asignacionPendiente[idSolicitud];
-    if (!asignacion) return;
-
-    try {
-      setAsignandoVehiculo(idSolicitud);
-
-      await editarSolicitudPorId(idSolicitud.toString(), {
-        placa_vehiculo: asignacion.placa,
-        cedula_conductor: asignacion.cedulaConductor,
-        estado: "aceptada",
-      });
-
-      // Actualizar la lista de solicitudes
-      const solicitudActualizada = await obtenerSolicitudes();
-      setSolicitud(solicitudActualizada);
-
-      // Remove from pending
-      const nuevaAsignacionPendiente = { ...asignacionPendiente };
-      delete nuevaAsignacionPendiente[idSolicitud];
-      setAsignacionPendiente(nuevaAsignacionPendiente);
-
-      toast.success(`Vehículo ${asignacion.placa} asignado correctamente`);
-    } catch (error) {
-      toast.warning(error instanceof Error ? error.message : "Error al asignar el vehículo");
-    } finally {
-      setAsignandoVehiculo(null);
-    }
-  };
-
-  const handleCancelarAsignacion = (idSolicitud: number) => {
-    const nuevaAsignacionPendiente = { ...asignacionPendiente };
-    delete nuevaAsignacionPendiente[idSolicitud];
-    setAsignacionPendiente(nuevaAsignacionPendiente);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Cargando información...</p>
-        </div>
-      </div>
-    );
+  const getSolicitudesByEstado = (estado: Estado) => {
+    return solicitudes.filter((s) => s.estado === estado)
   }
 
-  if (error) {
+  const handleAceptar = async (solicitud: Solicitud) => {
+    try {
+      await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
+        estado: "aceptada",
+      })
+      toast({
+        title: "Solicitud aceptada",
+        description: "Has aceptado la solicitud correctamente.",
+      })
+      mutate()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo aceptar la solicitud.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleRechazar = async (solicitud: Solicitud) => {
+    try {
+      await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
+        estado: "cancelada",
+      })
+      toast({
+        title: "Solicitud rechazada",
+        description: "Has rechazado la solicitud.",
+      })
+      mutate()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo rechazar la solicitud.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8 flex items-center justify-center">
-        <Card className="p-6 max-w-md">
-          <p className="text-red-600 text-center">{error}</p>
-        </Card>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Cargando solicitudes...</div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-                Solicitudes de Transporte
-              </h1>
-              <p className="text-slate-600">
-                Gestiona las solicitudes de transporte de empleados.
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="container mx-auto p-4 max-w-4xl">
+      <h1 className="text-2xl font-bold mb-6">Mis Solicitudes</h1>
 
-        <Card className="shadow-xl border-0 overflow-hidden">
-          <div className="p-6 border-b bg-white">
-            <h2 className="text-xl font-semibold text-slate-900">
-              Lista de Registros
-            </h2>
-            <p className="text-sm text-slate-600 mt-1">
-              Gestiona las solicitudes de transporte de empleados.
-            </p>
-          </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Estado)}>
+        <TabsList className="grid grid-cols-3 sm:grid-cols-6 gap-2 h-auto mb-6">
+          {ESTADOS.map((estado) => {
+            const count = getSolicitudesByEstado(estado.value).length
+            return (
+              <TabsTrigger key={estado.value} value={estado.value} className="flex flex-col items-center gap-1 py-2">
+                <span className="text-xs sm:text-sm">{estado.label}</span>
+                <Badge
+                  variant={count > 0 ? "default" : "secondary"}
+                  className="rounded-full min-w-6 h-6 flex items-center justify-center"
+                >
+                  {count}
+                </Badge>
+              </TabsTrigger>
+            )
+          })}
+        </TabsList>
 
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
-                    Solicitante
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
-                    Fecha/Hora
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
-                    Ruta
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
-                    Prioridad
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
-                    Estado
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
-                    Vehículo
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
-                    Conductor
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
-                    Horas actividad
-                  </th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {solicitud.map((sol) => {
-                  const vehiculoAsignado = vehiculos.find(
-                    (v) => v.placa === sol.placa_vehiculo
-                  );
-                  const asignacionActual =
-                    asignacionPendiente[sol.id_solicitud!];
-
-                  return (
-                    <tr
-                      key={sol.id_solicitud}
-                      className="hover:bg-slate-50 transition-colors"
-                    >
-                      <td className="py-4 px-6">
+        {ESTADOS.map((estado) => {
+          const solicitudesEstado = getSolicitudesByEstado(estado.value)
+          return (
+            <TabsContent key={estado.value} value={estado.value}>
+              {solicitudesEstado.length === 0 ? (
+                <Card className="p-8 text-center text-muted-foreground">
+                  No hay solicitudes {estado.label.toLowerCase()}
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {solicitudesEstado.map((solicitud) => (
+                    <Card key={solicitud.id_solicitud} className="p-4 sm:p-6">
+                      <div className="flex items-start justify-between mb-4">
                         <div>
-                          <div className="font-medium">
-                            {
-                              sol.usuario_solicitud_cedula_solicitanteTousuario
-                                ?.nombre
-                            }
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {
-                              sol.usuario_solicitud_cedula_solicitanteTousuario
-                                ?.telefono
-                            }
-                          </div>
+                          <h3 className="font-semibold text-lg">Solicitud {solicitud.id_solicitud}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Solicitante: {solicitud.usuario_solicitud_cedula_solicitanteTousuario?.nombre} -{" "}
+                            {solicitud.cedula_solicitante}
+                          </p>
                         </div>
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <div>
-                          <div className="font-medium">
-                            {formatearFecha(sol.fecha)}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {formatearHora(sol.hora)}
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <div>
-                          <div className="font-medium">{sol.origen}</div>
-                          <div className="text-sm text-muted-foreground">
-                            → {sol.destino}
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <Badge
-                          variant="outline"
-                          className={`${obtenerPrioridadColor(sol.prioridad)}`}
-                        >
-                          {ObtenerPrioridadLabel(sol.prioridad)}
+                        <Badge className={`${obtenerPrioridadColor(solicitud.prioridad)} border`}>
+                          {ObtenerPrioridadLabel(solicitud.prioridad)}
                         </Badge>
-                      </td>
+                      </div>
 
-                      <td className="py-4 px-6">
-                        <Badge
-                          variant="outline"
-                          className={`${obtenerEstadoSolicitudColor(
-                            sol.estado!
-                          )}`}
-                        >
-                          {ObtenerEstadoSolicitudLabel(sol.estado!)}
-                        </Badge>
-                      </td>
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium">
+                              {new Date(solicitud.fecha).toLocaleDateString("es-ES", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              })}
+                            </p>
+                          </div>
+                        </div>
 
-                      <td className="py-4 px-6">
-                        {!asignacionActual ? (
-                          <Select
-                            value={
-                              sol.placa_vehiculo && vehiculoAsignado
-                                ? sol.placa_vehiculo
-                                : undefined
-                            }
-                            onValueChange={(value) => {
-                              const vehiculoSeleccionado = vehiculos.find(
-                                (v) => v.placa === value
-                              );
-                              if (
-                                vehiculoSeleccionado &&
-                                vehiculoSeleccionado.conductor_sugerido &&
-                                sol.id_solicitud
-                              ) {
-                                handleSeleccionarVehiculo(
-                                  sol.id_solicitud,
-                                  vehiculoSeleccionado.placa,
-                                  vehiculoSeleccionado.conductor_sugerido
-                                    .nombre,
-                                  vehiculoSeleccionado.conductor_sugerido.cedula
-                                );
-                              }
-                            }}
-                            disabled={
-                              asignandoVehiculo === sol.id_solicitud ||
-                              vehiculos.length === 0
-                            }
+                        <div className="flex items-start gap-3">
+                          <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <p className="text-sm">{solicitud.hora}</p>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-sm">
+                              <span className="font-medium">Origen:</span> {solicitud.origen}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-medium">Destino:</span> {solicitud.destino}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <Users className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <p className="text-sm">
+                            {solicitud.cantidad_pasajeros} Pasajero
+                            {solicitud.cantidad_pasajeros !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <Car className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <p className="text-sm">
+                            {solicitud.placa_vehiculo} - {solicitud.vehiculo?.tipo_vehiculo}
+                          </p>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <Briefcase className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium">Tipo de Labor:</p>
+                            <p className="text-sm">{ObtenerTipoLaborLabel(solicitud.tipo_labor)}</p>
+                          </div>
+                        </div>
+
+                        {solicitud.equipo_o_carga && (
+                          <div className="flex items-start gap-3">
+                            <Package className="w-5 h-5 text-muted-foreground mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Equipo/Carga:</p>
+                              <p className="text-sm">{solicitud.equipo_o_carga}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {solicitud.observaciones && (
+                          <div className="flex items-start gap-3">
+                            <FileText className="w-5 h-5 text-muted-foreground mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Observaciones:</p>
+                              <p className="text-sm">{solicitud.observaciones}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {solicitud.estado === "asignada" && (
+                        <div className="flex gap-3 mt-6">
+                          <Button
+                            onClick={() => handleAceptar(solicitud)}
+                            className="flex-1 bg-green-600 hover:bg-green-700"
                           >
-                            <SelectTrigger className="w-[200px]">
-                              <SelectValue
-                                placeholder={
-                                  vehiculos.length === 0
-                                    ? "Sin vehículos"
-                                    : "Asignar vehículo"
-                                }
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {vehiculos.map((vehiculo) => (
-                                <SelectItem
-                                  key={vehiculo.placa}
-                                  value={vehiculo.placa}
-                                >
-                                  {vehiculo.placa} -{" "}
-                                  {vehiculo.conductor_sugerido?.nombre ||
-                                    "Sin conductor"}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <div className="text-sm">
-                            <div className="font-medium">
-                              {asignacionActual.placa}
-                            </div>
-                          </div>
-                        )}
-                        {vehiculoAsignado && !asignacionActual && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {vehiculoAsignado.placa} asignado
-                          </div>
-                        )}
-                      </td>
-
-                      <td className="py-4 px-6">
-                        {asignacionActual ? (
-                          <div>
-                            <div className="font-medium mb-2">
-                              {asignacionActual.nombreConductor}
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 w-8 p-0 border-green-500 text-green-600 hover:bg-green-50 bg-transparent"
-                                onClick={() =>
-                                  handleConfirmarAsignacion(sol.id_solicitud!)
-                                }
-                                disabled={
-                                  asignandoVehiculo === sol.id_solicitud
-                                }
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 w-8 p-0 border-red-500 text-red-600 hover:bg-red-50 bg-transparent"
-                                onClick={() =>
-                                  handleCancelarAsignacion(sol.id_solicitud!)
-                                }
-                                disabled={
-                                  asignandoVehiculo === sol.id_solicitud
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            {sol.usuario_solicitud_cedula_conductorTousuario
-                              ?.nombre || (
-                              <span className="text-muted-foreground">
-                                Sin asignar
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <div>
-                          {sol.hora_inicio_transporte &&
-                          sol.hora_fin_transporte ? (
-                            <>
-                              {formatearHora(sol.hora_inicio_transporte)} -{" "}
-                              {formatearHora(sol.hora_fin_transporte)}
-                            </>
-                          ) : (
-                            <span className="text-muted-foreground">
-                              Sin registrar
-                            </span>
-                          )}
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Aceptar Solicitud
+                          </Button>
+                          <Button onClick={() => handleRechazar(solicitud)} variant="destructive" className="flex-1">
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Rechazar
+                          </Button>
                         </div>
-                      </td>
-
-                      <td className="py-4 px-6">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <Link
-                              href={`/dashboard/gestion-solicitud/ver/${sol.id_solicitud}`}
-                            >
-                              <DropdownMenuItem className="cursor-pointer">
-                                <Eye className="w-4 h-4 mr-2" />
-                                Ver Detalle
-                              </DropdownMenuItem>
-                            </Link>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          )
+        })}
+      </Tabs>
     </div>
-  );
+  )
 }

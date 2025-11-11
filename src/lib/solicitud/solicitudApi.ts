@@ -8,8 +8,8 @@ export interface Solicitud {
     id_solicitud?: number
     cedula_solicitante?: number
     telefono?: string
-    placa_vehiculo?: string
-    cedula_conductor?: number
+    placa_vehiculo?: string | null
+    cedula_conductor?: number | null
     fecha?: string
     hora?: string
     origen?: string
@@ -20,11 +20,11 @@ export interface Solicitud {
     cantidad_pasajeros?: number
     equipo_o_carga?: string
     observaciones?: string
-    hora_inicio_transporte?: string
+    hora_inicio_transporte?: string | null
     hora_fin_transporte?: string
     usuario_solicitud_cedula_solicitanteTousuario?: UsuarioSolicitudCedulaSolicitanteTousuario
-    usuario_solicitud_cedula_conductorTousuario?: UsuarioSolicitudCedulaConductorTousuario
-    vehiculo?: Vehiculo
+    usuario_solicitud_cedula_conductorTousuario?: UsuarioSolicitudCedulaConductorTousuario | null
+    vehiculo?: Vehiculo | null
 }
 
 export interface UsuarioSolicitudCedulaSolicitanteTousuario {
@@ -85,6 +85,15 @@ export async function editarSolicitudPorId(id_solicitud: string, payload: Solici
 
 export async function obtenerMisSolicitudesConductor(): Promise<Solicitud[]> {
     const res = await fetch(`${URL}/misSolicitudes`,
+        { credentials: "include" });
+    if (res.status === 401 || res.status === 403) throw new Error("NO_AUTORIZADO");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Error al obtener solicitudes");
+    return data;
+}
+
+export async function obtenerMisSolicitudesSolicitante(): Promise<Solicitud[]> {
+    const res = await fetch(`${URL}/misSolicitudesSolicitante`,
         { credentials: "include" });
     if (res.status === 401 || res.status === 403) throw new Error("NO_AUTORIZADO");
     const data = await res.json();

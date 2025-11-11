@@ -106,3 +106,24 @@ export const obtenerTipoLabel = (tipo?: string) => {
       return "N/A";
   }
 };
+
+export const ObtenerTipoLaborLabel = (tipo_labor?: string) => {
+  switch (tipo_labor) {
+    case "mantenimiento":
+      return "Mantenimiento";
+    case "reparacion":
+      return "Reparación";
+    case "reunion":
+      return "Reunión";
+    case "inspeccion_tecnica":
+      return "Inspección Técnica";
+    case "emergencia":
+      return "Emergencia";
+    case "gestion_administrativa":
+      return "Gestión Administrativa";
+    case "otro":
+      return "Otro";
+    default:
+      return "Desconocido";
+  }
+};

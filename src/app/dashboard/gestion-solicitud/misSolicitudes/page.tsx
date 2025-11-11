@@ -1,42 +1,61 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { obtenerMisSolicitudesConductor, type Solicitud } from "@/lib/solicitud/solicitudApi";
+import {
+  obtenerMisSolicitudesConductor,
+  editarSolicitudPorId,
+  type Solicitud,
+  type Estado,
+} from "@/lib/solicitud/solicitudApi";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-
-// Utilidades que ya usas (ajusta import si las tienes en otra ruta)
 import { formatearFecha, formatearHora } from "@/componentsux/formatearFecha";
 import {
   ObtenerPrioridadLabel,
   obtenerPrioridadColor,
   ObtenerEstadoSolicitudLabel,
   obtenerEstadoSolicitudColor,
+  ObtenerTipoLaborLabel,
 } from "@/componentsux/estadoVehiculo";
+
+const ESTADOS: { value: Estado; label: string }[] = [
+  { value: "asignada", label: "Asignadas" },
+  { value: "aceptada", label: "Aceptadas" },
+  { value: "en_progreso", label: "En Progreso" },
+  { value: "finalizada", label: "Finalizadas" },
+  { value: "cancelada", label: "Canceladas" },
+  { value: "en_reasignacion", label: "En Reasignación" },
+];
 
 export default function MisSolicitudesPage() {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("asignada");
 
   useEffect(() => {
-    (async () => {
+    async function cargarDatos() {
       try {
         setLoading(true);
-        const data = await obtenerMisSolicitudesConductor();
-        console.log("Solicitudes obtenidas:", data);
-        setSolicitudes(data);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Error al cargar";
-        setError(msg);
-        toast.error(msg);
+        const solicitudData = await obtenerMisSolicitudesConductor();
+        console.log("info solicitud", solicitudData);
+        setSolicitudes(solicitudData);
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Error al cargar datos"
+        );
       } finally {
         setLoading(false);
       }
-    })();
+    }
+    cargarDatos();
   }, []);
 
+  const getSolicitudesByEstado = (estado: Estado) => {
+    return solicitudes.filter((s) => s.estado === estado);
+  };
 
   if (loading) {
     return (
@@ -57,74 +76,34 @@ export default function MisSolicitudesPage() {
   }
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Mis Solicitudes Asignadas</h1>
+    <div className="container mx-auto p-4 max-4xl bg-gradient-to-br from-slate-50 to-blue-50">
+      <h1 className="text-2xl text-blue-900 font-bold">Mis solicitudes</h1>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Estado)}>
+        <TabsList>
+          {ESTADOS.map((estado) => {
+            const count = getSolicitudesByEstado(estado.value).length;
+            return (
+              <TabsTrigger key={estado.value} value={estado.value}>
+                <span>{estado.label}</span>
+                <Badge
+                  variant={
+                    count > 0 ? "badgeCantidadEstado" : "badgeSinCantidadEstado"
+                  }
+                >
+                  {count}
+                </Badge>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
 
-        <Card className="overflow-hidden">
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left py-3 px-4">Fecha/Hora</th>
-                  <th className="text-left py-3 px-4">Ruta</th>
-                  <th className="text-left py-3 px-4">Vehículo</th>
-                  <th className="text-left py-3 px-4">Prioridad</th>
-                  <th className="text-left py-3 px-4">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {solicitudes.map((s) => (
-                  <tr key={s.id_solicitud} className="border-t">
-                    <td className="py-3 px-4">
-                      <div className="font-medium">{formatearFecha(s.fecha)}</div>
-                      <div className="text-sm text-muted-foreground">{formatearHora(s.hora)}</div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-medium">{s.origen}</div>
-                      <div className="text-sm text-muted-foreground">→ {s.destino}</div>
-                    </td>
-                    <td className="py-3 px-4">{s.placa_vehiculo ?? "Sin asignar"}</td>
-                    <td className="py-3 px-4">
-                      <Badge variant="outline" className={obtenerPrioridadColor(s.prioridad)}>
-                        {ObtenerPrioridadLabel(s.prioridad)}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Badge variant="outline" className={obtenerEstadoSolicitudColor(s.estado)}>
-                        {ObtenerEstadoSolicitudLabel(s.estado)}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Versión móvil simple */}
-          <div className="md:hidden divide-y">
-            {solicitudes.map((s) => (
-              <div key={s.id_solicitud} className="p-4">
-                <div className="flex justify-between">
-                  <div className="font-semibold">{formatearFecha(s.fecha)} · {formatearHora(s.hora)}</div>
-                  <Badge variant="outline" className={obtenerEstadoSolicitudColor(s.estado)}>
-                    {ObtenerEstadoSolicitudLabel(s.estado)}
-                  </Badge>
-                </div>
-                <div className="text-sm mt-1">
-                  {s.origen} → {s.destino}
-                </div>
-                <div className="mt-2 flex items-center gap-2">
-                  <Badge variant="outline" className={obtenerPrioridadColor(s.prioridad)}>
-                    {ObtenerPrioridadLabel(s.prioridad)}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">Vehículo: {s.placa_vehiculo ?? "—"}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+        {ESTADOS.map((estado) => {
+          const solicitudesEstado = getSolicitudesByEstado(estado.value);
+          return (
+            <TabsContent key={estado.value} value={estado.value}></TabsContent>
+          );
+        })}
+      </Tabs>
     </div>
   );
 }

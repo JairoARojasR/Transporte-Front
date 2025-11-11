@@ -35,11 +35,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreVertical, Eye, Check, X, UserCheck, UserMinus } from "lucide-react";
+import { MoreVertical, Eye, Check, X } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-
+import { toast } from "sonner";
 export default function GestionSolicitud() {
   const [solicitud, setSolicitud] = useState<Solicitud[]>([]);
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
@@ -86,16 +85,37 @@ export default function GestionSolicitud() {
     cargarVehiculos();
   }, []);
 
-  const handleSeleccionarVehiculo = (
+  const handleSeleccionarVehiculo = async (
     idSolicitud: number,
     placaVehiculo: string,
     nombreConductor: string,
     cedulaConductor: number
   ) => {
-    setAsignacionPendiente({
-      ...asignacionPendiente,
-      [idSolicitud]: { placa: placaVehiculo, nombreConductor, cedulaConductor },
-    });
+    try {
+      setAsignandoVehiculo(idSolicitud);
+      await editarSolicitudPorId(idSolicitud.toString(), {
+        placa_vehiculo: placaVehiculo,
+        cedula_conductor: cedulaConductor,
+        estado: "asignada",
+      });
+
+      const solicitudActualizada = await obtenerSolicitudes();
+      setSolicitud(solicitudActualizada);
+
+      setAsignacionPendiente({
+        ...asignacionPendiente,
+        [idSolicitud]: {
+          placa: placaVehiculo,
+          nombreConductor,
+          cedulaConductor,
+        },
+      });
+      toast.success(`Vehículo ${placaVehiculo} asignado. Confirme para aceptar.`);
+    } catch (error) {
+      toast.warning(error instanceof Error ? error.message : "Error al asignar el vehículo");
+    } finally {
+      setAsignandoVehiculo(null);
+    }
   };
 
   const handleConfirmarAsignacion = async (idSolicitud: number) => {
@@ -106,32 +126,48 @@ export default function GestionSolicitud() {
       setAsignandoVehiculo(idSolicitud);
 
       await editarSolicitudPorId(idSolicitud.toString(), {
-        placa_vehiculo: asignacion.placa,
-        cedula_conductor: asignacion.cedulaConductor,
         estado: "aceptada",
       });
 
-      // Actualizar la lista de solicitudes
       const solicitudActualizada = await obtenerSolicitudes();
       setSolicitud(solicitudActualizada);
 
-      // Remove from pending
       const nuevaAsignacionPendiente = { ...asignacionPendiente };
       delete nuevaAsignacionPendiente[idSolicitud];
       setAsignacionPendiente(nuevaAsignacionPendiente);
 
-      toast.success(`Vehículo ${asignacion.placa} asignado correctamente`);
+      toast.success(`La asignación del vehículo ${asignacion.placa} ha sido confirmada`);
     } catch (error) {
-      toast.warning(error instanceof Error ? error.message : "Error al asignar el vehículo");
+      toast.warning(error instanceof Error ? error.message : "Error al confirmar la asignación");
     } finally {
       setAsignandoVehiculo(null);
     }
   };
 
-  const handleCancelarAsignacion = (idSolicitud: number) => {
-    const nuevaAsignacionPendiente = { ...asignacionPendiente };
-    delete nuevaAsignacionPendiente[idSolicitud];
-    setAsignacionPendiente(nuevaAsignacionPendiente);
+  const handleCancelarAsignacion = async (idSolicitud: number) => {
+    try {
+      setAsignandoVehiculo(idSolicitud);
+
+      await editarSolicitudPorId(idSolicitud.toString(), {
+        placa_vehiculo: null,
+        cedula_conductor: null,
+        hora_inicio_transporte: null,
+        estado: "pendiente",
+      });
+
+      const solicitudActualizada = await obtenerSolicitudes();
+      setSolicitud(solicitudActualizada);
+
+      const nuevaAsignacionPendiente = { ...asignacionPendiente };
+      delete nuevaAsignacionPendiente[idSolicitud];
+      setAsignacionPendiente(nuevaAsignacionPendiente);
+
+      toast.info("Asignacio cancelada, La solicitud ha vuelto a estado pendiente");
+    } catch (error) {
+      toast.warning(error instanceof Error ? error.message : "Error al cancelar la asignación")
+    } finally {
+      setAsignandoVehiculo(null);
+    }
   };
 
   if (loading) {
@@ -285,7 +321,9 @@ export default function GestionSolicitud() {
                       </td>
 
                       <td className="py-4 px-6">
-                        {!asignacionActual ? (
+                        {!asignacionActual &&
+                        sol.estado !== "asignada" &&
+                        sol.estado !== "aceptada" ? (
                           <Select
                             value={
                               sol.placa_vehiculo && vehiculoAsignado
@@ -315,7 +353,7 @@ export default function GestionSolicitud() {
                               vehiculos.length === 0
                             }
                           >
-                            <SelectTrigger className="w-[230px]">
+                            <SelectTrigger className="w-[200px]">
                               <SelectValue
                                 placeholder={
                                   vehiculos.length === 0
@@ -330,7 +368,7 @@ export default function GestionSolicitud() {
                                   key={vehiculo.placa}
                                   value={vehiculo.placa}
                                 >
-                                  {vehiculo.placa} -{" "} {vehiculo.tipo_vehiculo} - {" "}
+                                  {vehiculo.placa} -{" "}
                                   {vehiculo.conductor_sugerido?.nombre ||
                                     "Sin conductor"}
                                 </SelectItem>
@@ -340,13 +378,10 @@ export default function GestionSolicitud() {
                         ) : (
                           <div className="text-sm">
                             <div className="font-medium">
-                              {asignacionActual.placa}
+                              {asignacionActual?.placa ||
+                                sol.placa_vehiculo ||
+                                "Sin asignar"}
                             </div>
-                          </div>
-                        )}
-                        {vehiculoAsignado && !asignacionActual && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {vehiculoAsignado.placa} {"-"} {vehiculoAsignado.tipo_vehiculo} asignado
                           </div>
                         )}
                       </td>
@@ -361,7 +396,7 @@ export default function GestionSolicitud() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-8 w-8 p-0 border-green-500 cursor-pointer"
+                                className="h-8 w-8 p-0 border-green-500 text-green-600 hover:bg-green-50 bg-transparent"
                                 onClick={() =>
                                   handleConfirmarAsignacion(sol.id_solicitud!)
                                 }
@@ -369,12 +404,12 @@ export default function GestionSolicitud() {
                                   asignandoVehiculo === sol.id_solicitud
                                 }
                               >
-                                <UserCheck className="h-4 w-4 text-green-600" />
+                                <Check className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-8 w-8 p-0 border-red-500 cursor-pointer"
+                                className="h-8 w-8 p-0 border-red-500 text-red-600 hover:bg-red-50 bg-transparent"
                                 onClick={() =>
                                   handleCancelarAsignacion(sol.id_solicitud!)
                                 }
@@ -382,7 +417,7 @@ export default function GestionSolicitud() {
                                   asignandoVehiculo === sol.id_solicitud
                                 }
                               >
-                                <UserMinus className="h-4 w-4 text-red-600" />
+                                <X className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
