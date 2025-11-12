@@ -6,14 +6,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast"
 import {
   obtenerMisSolicitudesConductor,
   editarSolicitudPorId,
   type Solicitud,
   type Estado,
 } from "@/lib/solicitud/solicitudApi"
-import { ObtenerPrioridadLabel, obtenerPrioridadColor, ObtenerTipoLaborLabel } from "@/components/ux/labels"
+import { ObtenerPrioridadLabel, obtenerPrioridadColor, ObtenerTipoLaborLabel } from "@/componentsux/estadoVehiculo"
 import { Calendar, Clock, MapPin, Users, Car, Briefcase, Package, FileText, CheckCircle, XCircle } from "lucide-react"
 
 const ESTADOS: { value: Estado; label: string }[] = [
@@ -26,7 +25,6 @@ const ESTADOS: { value: Estado; label: string }[] = [
 ]
 
 export default function MisSolicitudesPage() {
-  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState<Estado>("asignada")
 
   const {
@@ -47,17 +45,17 @@ export default function MisSolicitudesPage() {
       await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
         estado: "aceptada",
       })
-      toast({
-        title: "Solicitud aceptada",
-        description: "Has aceptado la solicitud correctamente.",
-      })
+      // toast({
+      //   title: "Solicitud aceptada",
+      //   description: "Has aceptado la solicitud correctamente.",
+      // })
       mutate()
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo aceptar la solicitud.",
-        variant: "destructive",
-      })
+      // toast({
+      //   title: "Error",
+      //   description: "No se pudo aceptar la solicitud.",
+      //   variant: "destructive",
+      // })
     }
   }
 
@@ -66,17 +64,17 @@ export default function MisSolicitudesPage() {
       await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
         estado: "cancelada",
       })
-      toast({
-        title: "Solicitud rechazada",
-        description: "Has rechazado la solicitud.",
-      })
+      // toast({
+      //   title: "Solicitud rechazada",
+      //   description: "Has rechazado la solicitud.",
+      // })
       mutate()
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo rechazar la solicitud.",
-        variant: "destructive",
-      })
+      // toast({
+      //   title: "Error",
+      //   description: "No se pudo rechazar la solicitud.",
+      //   variant: "destructive",
+      // })
     }
   }
 
@@ -139,13 +137,13 @@ export default function MisSolicitudesPage() {
                         <div className="flex items-start gap-3">
                           <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
                           <div>
-                            <p className="text-sm font-medium">
+                            {/* <p className="text-sm font-medium">
                               {new Date(solicitud.fecha).toLocaleDateString("es-ES", {
                                 day: "2-digit",
                                 month: "2-digit",
                                 year: "numeric",
                               })}
-                            </p>
+                            </p> */}
                           </div>
                         </div>
 
@@ -211,6 +209,22 @@ export default function MisSolicitudesPage() {
                       </div>
 
                       {solicitud.estado === "asignada" && (
+                        <div className="flex gap-3 mt-6">
+                          <Button
+                            onClick={() => handleAceptar(solicitud)}
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Aceptar Solicitud
+                          </Button>
+                          <Button onClick={() => handleRechazar(solicitud)} variant="destructive" className="flex-1">
+                            <XCircle className="w-4 h-4 mr-2" />
+                            Rechazar
+                          </Button>
+                        </div>
+                      )}
+
+                      {solicitud.estado === "aceptada" && (
                         <div className="flex gap-3 mt-6">
                           <Button
                             onClick={() => handleAceptar(solicitud)}

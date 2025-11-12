@@ -86,7 +86,7 @@ export default function SolicitudVehiculoPage() {
       }
     };
     cargarEmpleados();
-  });
+  }, []);
 
   const handleEmpleadoChange = (value: string) => {
     const cedula = parseInt(value);
@@ -101,9 +101,12 @@ export default function SolicitudVehiculoPage() {
     e.preventDefault();
     setIsLoading(true);
 
+     console.log("Datos a enviar:", formData);
+
     try {
       await registrarSolicitud(formData);
       toast.success("Solicitud creada exitosamente");
+       console.log("Datos enviados:", formData);
       //router.push("/dashboard");
     } catch (error) {
       toast.error("Error al crear el registro");
@@ -385,6 +388,25 @@ export default function SolicitudVehiculoPage() {
                     </Select>
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cantidad_pasajeros">Cantidad Pasajeros</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={formData.cantidad_pasajeros ?? ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        cantidad_pasajeros:
+                          e.target.value ? Number.parseFloat(e.target.value) : undefined,
+                      }))
+                    }
+                    className="w-1/2"
+      
+                  ></Input>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="equipo">Carga o Equipo a Transportar</Label>
                   <Textarea
