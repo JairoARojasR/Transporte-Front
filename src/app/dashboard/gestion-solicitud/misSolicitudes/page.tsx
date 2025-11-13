@@ -51,16 +51,16 @@ const ESTADOS: { value: Estado; label: string }[] = [
   { value: "en_reasignacion", label: "En Reasignación" },
 ];
 
-const formatDuration = (minutes: number) => {
-  const hours = Math.floor(minutes / 60);  // Calculamos las horas
-  const mins = Math.floor(minutes % 60);  // Calculamos los minutos restantes
+// const formatDuration = (minutes: number) => {
+//   const hours = Math.floor(minutes / 60);  // Calculamos las horas
+//   const mins = Math.floor(minutes % 60);  // Calculamos los minutos restantes
 
-  const parts = [];
-  if (hours > 0) parts.push(`${hours}h`);  // Si hay horas, las mostramos
-  if (mins > 0 || parts.length === 0) parts.push(`${mins}min`);  // Si hay minutos, los mostramos
+//   const parts = [];
+//   if (hours > 0) parts.push(`${hours}h`);  // Si hay horas, las mostramos
+//   if (mins > 0 || parts.length === 0) parts.push(`${mins}min`);  // Si hay minutos, los mostramos
 
-  return parts.join(" ");  // Unimos las partes, como "1h 25min"
-};
+//   return parts.join(" ");  // Unimos las partes, como "1h 25min"
+// };
 
 export default function MisSolicitudesPage() {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
@@ -91,12 +91,35 @@ export default function MisSolicitudesPage() {
     return solicitudes.filter((s) => s.estado === estado);
   };
 
-  const calcularHoraTotal = (horaInicio: string, horaFin: string) => {
-    const inicio = Number(horaInicio);
-    const fin = Number(horaFin);
-    const diferenciaEnMilisegundos = fin - inicio;
-    return diferenciaEnMilisegundos
+
+  const isoAHoraEnSegundos = (iso: string): number => {
+  // Ej: "2025-11-12T21:49:44.895Z"
+  const [, timePartRaw] = iso.split("T");       // "21:49:44.895Z"
+  const timePart = timePartRaw.slice(0, 8);     // "21:49:44"
+
+  const [h, m, s] = timePart.split(":").map(Number);
+
+  return h * 3600 + m * 60 + s;
 };
+
+
+const formatearDuracion = (segundos: number): string => {
+  if (!segundos && segundos !== 0) return "N/A";
+
+  const horas = Math.floor(segundos / 3600);
+  const minutos = Math.floor((segundos % 3600) / 60);
+  const segs = segundos % 60;
+
+  const partes = [];
+
+  if (horas > 0) partes.push(`${horas} hora${horas > 1 ? "s" : ""}`);
+  if (minutos > 0) partes.push(`${minutos} minuto${minutos > 1 ? "s" : ""}`);
+  if (segs > 0) partes.push(`${segs} segundo${segs > 1 ? "s" : ""}`);
+
+  return partes.join(" ");
+};
+
+
 
   const handleAceptar = async (solicitud: Solicitud) => {
     try {
@@ -134,49 +157,41 @@ export default function MisSolicitudesPage() {
     }
   };
 
-  // const handleFinalizar = async (solicitud: Solicitud) => {
-  //   try {
-  //     console.log("Hora de inicio transporte:", horaTransporte);
-  //     let totalHora = 0
-  //     if (solicitud.hora_inicio_transporte) {
-  //       const inicio = dayjs(solicitud.hora_inicio_transporte)
-  //       const fin = dayjs(horaTransporte)
-  //       totalHora = fin.diff(inicio, "minute", true) // Get fractional minutes
-  //     }
-
-      
-
-  //     await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
-  //       estado: "finalizada",
-  //       hora_fin_transporte: horaTransporte,
-  //       hora_total: Math.round(totalHora),
-  //     });
-
-  //     toast.success("Has finalizado la solicitud correctamente.");
-  //   } catch (error) {
-  //     toast.warning("No se pudo finalizar la solicitud.");
-  //   }
-  // };
-
   const handleFinalizar = async (solicitud: Solicitud) => {
   try {
-    const horaTransporte = dayjs().tz("America/Bogota").format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
-    console.log("Hora de inicio transporte:", horaTransporte);
-
-    let totalHora = 0;
-    if (solicitud.hora_inicio_transporte) {
-      const inicio = dayjs(solicitud.hora_inicio_transporte);
-      const fin = dayjs(horaTransporte);
-
-      // Calculamos la diferencia en minutos, asegurándonos de que no se produzcan números absurdos
-      totalHora = fin.diff(inicio, "minute");
+    if (!solicitud.hora_inicio_transporte) {
+      toast.warning("Esta solicitud no tiene hora de inicio registrada");
+      return;
     }
 
-    // Guardar en la base de datos el tiempo total calculado
+    // 1. Hora FIN actual en Bogotá, mismo formato que usas para guardar
+    const horaFinIso = dayjs()
+      .tz("America/Bogota")
+      .format("YYYY-MM-DDTHH:mm:ss.SSS[Z]");
+
+    // 2. Hora INICIO desde lo que ya guardaste
+    const horaInicioIso = solicitud.hora_inicio_transporte;
+
+    // 3. Convertir ambas a segundos del día (modo manual)
+    const segundosInicio = isoAHoraEnSegundos(horaInicioIso);
+    const segundosFin = isoAHoraEnSegundos(horaFinIso);
+
+    let diferenciaSegundos = segundosFin - segundosInicio;
+
+    // Por si acaso, si da negativo (cruzó medianoche) lo ajustas:
+    if (diferenciaSegundos < 0) {
+      diferenciaSegundos += 24 * 3600;
+    }
+
+    console.log("Inicio:", horaInicioIso);
+    console.log("Fin:", horaFinIso);
+    console.log("Diferencia (segundos):", diferenciaSegundos);
+
     await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
       estado: "finalizada",
-      hora_fin_transporte: horaTransporte,
-      hora_total: totalHora,  // Guardamos la duración en minutos
+      hora_fin_transporte: horaFinIso,
+      // Ajusta el nombre del campo a como lo tienes en Prisma:
+      hora_total: diferenciaSegundos, // o tiempo_total_segundos, etc.
     });
 
     toast.success("Has finalizado la solicitud correctamente.");
@@ -184,20 +199,6 @@ export default function MisSolicitudesPage() {
     toast.warning("No se pudo finalizar la solicitud.");
   }
 };
-
-
-  // const handleFinalizar = async (solicitud: Solicitud) => {
-  //   try {
-  //     console.log("Hora de fin transporte:", horaTransporte);
-  //     await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
-  //       estado: "finalizada",
-  //       hora_fin_transporte: horaTransporte,
-  //     });
-  //     toast.success("Has finalizado la solicitud correctamente.");
-  //   } catch (error) {
-  //     toast.warning("No se pudo finalizar la solicitud.");
-  //   }
-  // };
 
   if (loading) {
     return (
@@ -407,14 +408,13 @@ export default function MisSolicitudesPage() {
                           </Button>
                         </div>
                       )}
-
-                      {solicitud.estado === "finalizada" && solicitud.hora_total !== undefined && (
+                      {solicitud.estado === "finalizada" && solicitud.hora_total !== null && solicitud.hora_total !== undefined && (
                           <div className="flex items-start gap-3">
                             <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
                             <div>
                               <p className="text-sm font-medium">Duración Total:</p>
                               <p className="text-sm font-semibold text-primary">
-                                {formatDuration(solicitud.hora_total!)}
+                                {formatearDuracion(solicitud.hora_total)}
                               </p>
                             </div>
                           </div>
