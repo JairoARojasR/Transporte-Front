@@ -22,6 +22,7 @@ export interface Solicitud {
     observaciones?: string
     hora_inicio_transporte?: string | null
     hora_fin_transporte?: string | null
+    hora_total?: number | null
     usuario_solicitud_cedula_solicitanteTousuario?: UsuarioSolicitudCedulaSolicitanteTousuario
     usuario_solicitud_cedula_conductorTousuario?: UsuarioSolicitudCedulaConductorTousuario | null
     vehiculo?: Vehiculo | null

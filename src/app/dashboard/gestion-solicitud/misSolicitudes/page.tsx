@@ -34,6 +34,7 @@ import {
   Car,
   CheckCircle,
   CircleStop,
+  Clock,
   FileText,
   MapPin,
   Package,
@@ -50,12 +51,23 @@ const ESTADOS: { value: Estado; label: string }[] = [
   { value: "en_reasignacion", label: "En Reasignación" },
 ];
 
+const formatDuration = (minutes: number) => {
+  const hours = Math.floor(minutes / 60);  // Calculamos las horas
+  const mins = Math.floor(minutes % 60);  // Calculamos los minutos restantes
+
+  const parts = [];
+  if (hours > 0) parts.push(`${hours}h`);  // Si hay horas, las mostramos
+  if (mins > 0 || parts.length === 0) parts.push(`${mins}min`);  // Si hay minutos, los mostramos
+
+  return parts.join(" ");  // Unimos las partes, como "1h 25min"
+};
+
 export default function MisSolicitudesPage() {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Estado>("asignada");
-  const horaTransporte = new Date().toISOString();
+  const horaTransporte = dayjs().tz("America/Bogota").format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
 
   useEffect(() => {
     async function cargarDatos() {
@@ -78,6 +90,13 @@ export default function MisSolicitudesPage() {
   const getSolicitudesByEstado = (estado: Estado) => {
     return solicitudes.filter((s) => s.estado === estado);
   };
+
+  const calcularHoraTotal = (horaInicio: string, horaFin: string) => {
+    const inicio = Number(horaInicio);
+    const fin = Number(horaFin);
+    const diferenciaEnMilisegundos = fin - inicio;
+    return diferenciaEnMilisegundos
+};
 
   const handleAceptar = async (solicitud: Solicitud) => {
     try {
@@ -103,31 +122,69 @@ export default function MisSolicitudesPage() {
 
   const handleIniciar = async (solicitud: Solicitud) => {
     try {
-      console.log("Hora de inicio transporte:", horaTransporte);
       await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
         estado: "en_progreso",
         hora_inicio_transporte: horaTransporte,
       });
+      console.log("Hora de inicio transporte:", horaTransporte);
 
       toast.success("Has iniciado la solicitud correctamente.");
     } catch (error) {
       toast.warning("No se pudo iniciar la solicitud.");
     }
   };
+
+  // const handleFinalizar = async (solicitud: Solicitud) => {
+  //   try {
+  //     console.log("Hora de inicio transporte:", horaTransporte);
+  //     let totalHora = 0
+  //     if (solicitud.hora_inicio_transporte) {
+  //       const inicio = dayjs(solicitud.hora_inicio_transporte)
+  //       const fin = dayjs(horaTransporte)
+  //       totalHora = fin.diff(inicio, "minute", true) // Get fractional minutes
+  //     }
+
+      
+
+  //     await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
+  //       estado: "finalizada",
+  //       hora_fin_transporte: horaTransporte,
+  //       hora_total: Math.round(totalHora),
+  //     });
+
+  //     toast.success("Has finalizado la solicitud correctamente.");
+  //   } catch (error) {
+  //     toast.warning("No se pudo finalizar la solicitud.");
+  //   }
+  // };
 
   const handleFinalizar = async (solicitud: Solicitud) => {
-    try {
-      console.log("Hora de inicio transporte:", horaTransporte);
-      await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
-        estado: "finalizada",
-        hora_fin_transporte: horaTransporte,
-      });
+  try {
+    const horaTransporte = dayjs().tz("America/Bogota").format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+    console.log("Hora de inicio transporte:", horaTransporte);
 
-      toast.success("Has iniciado la solicitud correctamente.");
-    } catch (error) {
-      toast.warning("No se pudo iniciar la solicitud.");
+    let totalHora = 0;
+    if (solicitud.hora_inicio_transporte) {
+      const inicio = dayjs(solicitud.hora_inicio_transporte);
+      const fin = dayjs(horaTransporte);
+
+      // Calculamos la diferencia en minutos, asegurándonos de que no se produzcan números absurdos
+      totalHora = fin.diff(inicio, "minute");
     }
-  };
+
+    // Guardar en la base de datos el tiempo total calculado
+    await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
+      estado: "finalizada",
+      hora_fin_transporte: horaTransporte,
+      hora_total: totalHora,  // Guardamos la duración en minutos
+    });
+
+    toast.success("Has finalizado la solicitud correctamente.");
+  } catch (error) {
+    toast.warning("No se pudo finalizar la solicitud.");
+  }
+};
+
 
   // const handleFinalizar = async (solicitud: Solicitud) => {
   //   try {
@@ -350,6 +407,18 @@ export default function MisSolicitudesPage() {
                           </Button>
                         </div>
                       )}
+
+                      {solicitud.estado === "finalizada" && solicitud.hora_total !== undefined && (
+                          <div className="flex items-start gap-3">
+                            <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Duración Total:</p>
+                              <p className="text-sm font-semibold text-primary">
+                                {formatDuration(solicitud.hora_total!)}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                     </Card>
                   ))}
                 </div>
