@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import useSWR from "swr";
 import {
   obtenerVehiculosPorInspeccionFecha,
   type Vehiculo,
@@ -35,15 +36,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreVertical, Eye, Check, X } from "lucide-react";
+import { MoreVertical, Eye, Check, X, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+
 export default function GestionSolicitud() {
-  const [solicitud, setSolicitud] = useState<Solicitud[]>([]);
-  const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: solicitud = [],
+    error,
+    isLoading,
+    mutate,
+  } = useSWR<Solicitud[]>("/api/solicitudes", obtenerSolicitudes, {
+    refreshInterval: 10000,
+    revalidateOnFocus: true,
+  });
+
+  const fechaHoy = new Date().toISOString().split("T")[0];
+  const { data: vehiculos = [] } = useSWR<Vehiculo[]>(
+    `/api/vehiculos/${fechaHoy}`,
+    () => obtenerVehiculosPorInspeccionFecha(fechaHoy),
+    {
+      refreshInterval: 30000, // Auto-refresh cada 30 segundos
+    }
+  );
+  // const [solicitud, setSolicitud] = useState<Solicitud[]>([]);
+  // const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
+
   const [asignandoVehiculo, setAsignandoVehiculo] = useState<number | null>(
     null
   );
@@ -55,35 +76,68 @@ export default function GestionSolicitud() {
     };
   }>({});
 
-  useEffect(() => {
-    async function cargarDatos() {
-      try {
-        setLoading(true);
-        const solicitudData = await obtenerSolicitudes();
-        setSolicitud(solicitudData);
-      } catch (error) {
-        setError(
-          error instanceof Error ? error.message : "Error al cargar datos"
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-    cargarDatos();
-  }, []);
+   useEffect(() => {
+    if (!solicitud.length) return
 
-  useEffect(() => {
-    async function cargarVehiculos() {
-      try {
-        const fechaHoy = new Date().toISOString().split("T")[0];
-        const data = await obtenerVehiculosPorInspeccionFecha(fechaHoy);
-        setVehiculos(data);
-      } catch (error) {
-        console.error("Error al cargar vehículos:", error);
+    const nuevaAsignacionPendiente = { ...asignacionPendiente }
+    let huboCambios = false
+
+    Object.keys(asignacionPendiente).forEach((idStr) => {
+      const id = Number.parseInt(idStr)
+      const solicitudActual = solicitud.find((s) => s.id_solicitud === id)
+
+      if (!solicitudActual || solicitudActual.estado !== "asignada") {
+        delete nuevaAsignacionPendiente[id]
+        huboCambios = true
+      } else if (
+        solicitudActual.cedula_conductor &&
+        solicitudActual.cedula_conductor !== asignacionPendiente[id]?.cedulaConductor
+      ) {
+        delete nuevaAsignacionPendiente[id]
+        huboCambios = true
       }
+    })
+
+    if (huboCambios) {
+      setAsignacionPendiente(nuevaAsignacionPendiente)
     }
-    cargarVehiculos();
-  }, []);
+  }, [solicitud])
+
+
+  const handleRefresh = async () => {
+    toast.info("Actualizando... Cargando nuevas solicitudes");
+    await mutate();
+  };
+
+  // useEffect(() => {
+  //   async function cargarDatos() {
+  //     try {
+  //       setLoading(true);
+  //       const solicitudData = await obtenerSolicitudes();
+  //       setSolicitud(solicitudData);
+  //     } catch (error) {
+  //       setError(
+  //         error instanceof Error ? error.message : "Error al cargar datos"
+  //       );
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  //   cargarDatos();
+  // }, []);
+
+  // useEffect(() => {
+  //   async function cargarVehiculos() {
+  //     try {
+  //       const fechaHoy = new Date().toISOString().split("T")[0];
+  //       const data = await obtenerVehiculosPorInspeccionFecha(fechaHoy);
+  //       setVehiculos(data);
+  //     } catch (error) {
+  //       console.error("Error al cargar vehículos:", error);
+  //     }
+  //   }
+  //   cargarVehiculos();
+  // }, []);
 
   const handleSeleccionarVehiculo = async (
     idSolicitud: number,
@@ -99,8 +153,10 @@ export default function GestionSolicitud() {
         estado: "asignada",
       });
 
-      const solicitudActualizada = await obtenerSolicitudes();
-      setSolicitud(solicitudActualizada);
+      await mutate();
+
+      // const solicitudActualizada = await obtenerSolicitudes();
+      // setSolicitud(solicitudActualizada);
 
       setAsignacionPendiente({
         ...asignacionPendiente,
@@ -110,9 +166,13 @@ export default function GestionSolicitud() {
           cedulaConductor,
         },
       });
-      toast.success(`Vehículo ${placaVehiculo} asignado. Confirme para aceptar.`);
+      toast.success(
+        `Vehículo ${placaVehiculo} asignado. Esperando confirmación.`
+      );
     } catch (error) {
-      toast.warning(error instanceof Error ? error.message : "Error al asignar el vehículo");
+      toast.warning(
+        error instanceof Error ? error.message : "Error al asignar el vehículo"
+      );
     } finally {
       setAsignandoVehiculo(null);
     }
@@ -129,16 +189,23 @@ export default function GestionSolicitud() {
         estado: "aceptada",
       });
 
-      const solicitudActualizada = await obtenerSolicitudes();
-      setSolicitud(solicitudActualizada);
+      await mutate();
+
+      // const solicitudActualizada = await obtenerSolicitudes();
+      // setSolicitud(solicitudActualizada);
 
       const nuevaAsignacionPendiente = { ...asignacionPendiente };
       delete nuevaAsignacionPendiente[idSolicitud];
       setAsignacionPendiente(nuevaAsignacionPendiente);
-
-      toast.success(`La asignación del vehículo ${asignacion.placa} ha sido confirmada`);
+      toast.success(
+        `La asignación del vehículo ${asignacion.placa} ha sido confirmada`
+      );
     } catch (error) {
-      toast.warning(error instanceof Error ? error.message : "Error al confirmar la asignación");
+      toast.warning(
+        error instanceof Error
+          ? error.message
+          : "Error al confirmar la asignación"
+      );
     } finally {
       setAsignandoVehiculo(null);
     }
@@ -155,22 +222,30 @@ export default function GestionSolicitud() {
         estado: "pendiente",
       });
 
-      const solicitudActualizada = await obtenerSolicitudes();
-      setSolicitud(solicitudActualizada);
+      await mutate();
+
+      // const solicitudActualizada = await obtenerSolicitudes();
+      // setSolicitud(solicitudActualizada);
 
       const nuevaAsignacionPendiente = { ...asignacionPendiente };
       delete nuevaAsignacionPendiente[idSolicitud];
       setAsignacionPendiente(nuevaAsignacionPendiente);
 
-      toast.info("Asignacio cancelada, La solicitud ha vuelto a estado pendiente");
+      toast.info(
+        "Asignacio cancelada, La solicitud ha vuelto a estado pendiente"
+      );
     } catch (error) {
-      toast.warning(error instanceof Error ? error.message : "Error al cancelar la asignación")
+      toast.warning(
+        error instanceof Error
+          ? error.message
+          : "Error al cancelar la asignación"
+      );
     } finally {
       setAsignandoVehiculo(null);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8 flex items-center justify-center">
         <div className="text-center">
@@ -185,7 +260,9 @@ export default function GestionSolicitud() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8 flex items-center justify-center">
         <Card className="p-6 max-w-md">
-          <p className="text-red-600 text-center">{error}</p>
+          <p className="text-red-600 text-center">
+            {error?.message || "Error al cargar datos"}
+          </p>
         </Card>
       </div>
     );
@@ -204,16 +281,18 @@ export default function GestionSolicitud() {
                 Gestiona las solicitudes de transporte de empleados.
               </p>
             </div>
+            <Button onClick={handleRefresh} variant="register" className="gap-2">
+              <RefreshCcw className="h-4 w-4" />
+              Refrescar
+            </Button>
           </div>
         </div>
 
         <Card className="shadow-xl border-0 overflow-hidden">
           <div className="p-6 border-b bg-white">
-            <h2 className="text-xl font-semibold text-slate-900">
-              Lista de Registros
-            </h2>
+            <h2 className="text-xl font-semibold text-slate-900">Lista de Registros</h2>
             <p className="text-sm text-slate-600 mt-1">
-              Gestiona las solicitudes de transporte de empleados.
+              Se actualiza automáticamente cada 10 segundos. Total: {solicitud.length} solicitudes
             </p>
           </div>
 

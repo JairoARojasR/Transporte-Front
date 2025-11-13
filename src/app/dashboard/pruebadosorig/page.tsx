@@ -2,6 +2,9 @@
 
 import { useState } from "react"
 import useSWR from "swr"
+import dayjs from "dayjs"
+import utc from "dayjs/plugin/utc"
+import timezone from "dayjs/plugin/timezone"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,7 +16,23 @@ import {
   type Estado,
 } from "@/lib/solicitud/solicitudApi"
 import { ObtenerPrioridadLabel, obtenerPrioridadColor, ObtenerTipoLaborLabel } from "@/componentsux/estadoVehiculo"
-import { Calendar, Clock, MapPin, Users, Car, Briefcase, Package, FileText, CheckCircle, XCircle } from "lucide-react"
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  Car,
+  Briefcase,
+  Package,
+  FileText,
+  CheckCircle,
+  XCircle,
+  PlayCircle,
+  StopCircle,
+} from "lucide-react"
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 const ESTADOS: { value: Estado; label: string }[] = [
   { value: "asignada", label: "Asignadas" },
@@ -23,6 +42,19 @@ const ESTADOS: { value: Estado; label: string }[] = [
   { value: "cancelada", label: "Canceladas" },
   { value: "en_reasignacion", label: "En Reasignación" },
 ]
+
+const formatDuration = (minutes: number) => {
+  const hours = Math.floor(minutes / 60)
+  const mins = Math.floor(minutes % 60)
+  const secs = Math.floor((minutes % 1) * 60)
+
+  const parts = []
+  if (hours > 0) parts.push(`${hours}h`)
+  if (mins > 0) parts.push(`${mins}min`)
+  if (secs > 0 || parts.length === 0) parts.push(`${secs}s`)
+
+  return parts.join(" ")
+}
 
 export default function MisSolicitudesPage() {
   const [activeTab, setActiveTab] = useState<Estado>("asignada")
@@ -45,17 +77,9 @@ export default function MisSolicitudesPage() {
       await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
         estado: "aceptada",
       })
-      // toast({
-      //   title: "Solicitud aceptada",
-      //   description: "Has aceptado la solicitud correctamente.",
-      // })
       mutate()
     } catch (error) {
-      // toast({
-      //   title: "Error",
-      //   description: "No se pudo aceptar la solicitud.",
-      //   variant: "destructive",
-      // })
+     
     }
   }
 
@@ -64,17 +88,45 @@ export default function MisSolicitudesPage() {
       await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
         estado: "cancelada",
       })
-      // toast({
-      //   title: "Solicitud rechazada",
-      //   description: "Has rechazado la solicitud.",
-      // })
       mutate()
     } catch (error) {
-      // toast({
-      //   title: "Error",
-      //   description: "No se pudo rechazar la solicitud.",
-      //   variant: "destructive",
-      // })
+    }
+  }
+
+  const handleIniciarViaje = async (solicitud: Solicitud) => {
+    try {
+      const horaTransporte = dayjs().tz("America/Bogota").format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
+      await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
+        estado: "en_progreso",
+        hora_inicio_transporte: horaTransporte,
+      })
+      
+      mutate()
+    } catch (error) {
+      
+    }
+  }
+
+  const handleFinalizarViaje = async (solicitud: Solicitud) => {
+    try {
+      const horaTransporte = dayjs().tz("America/Bogota").format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
+
+      // Calculate duration in minutes
+      let totalHora = 0
+      if (solicitud.hora_inicio_transporte) {
+        const inicio = dayjs(solicitud.hora_inicio_transporte)
+        const fin = dayjs(horaTransporte)
+        totalHora = fin.diff(inicio, "minute", true) // Get fractional minutes
+      }
+
+      await editarSolicitudPorId(solicitud.id_solicitud!.toString(), {
+        estado: "finalizada",
+        hora_fin_transporte: horaTransporte,
+        hora_total: Math.round(totalHora), // Round to nearest minute
+      })
+      
+      mutate()
+    } catch (error) {
     }
   }
 
@@ -136,15 +188,15 @@ export default function MisSolicitudesPage() {
                       <div className="space-y-3">
                         <div className="flex items-start gap-3">
                           <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
-                          <div>
-                            {/* <p className="text-sm font-medium">
+                          {/* <div>
+                            <p className="text-sm font-medium">
                               {new Date(solicitud.fecha).toLocaleDateString("es-ES", {
                                 day: "2-digit",
                                 month: "2-digit",
                                 year: "numeric",
                               })}
-                            </p> */}
-                          </div>
+                            </p>
+                          </div> */}
                         </div>
 
                         <div className="flex items-start gap-3">
@@ -206,6 +258,17 @@ export default function MisSolicitudesPage() {
                             </div>
                           </div>
                         )}
+
+                        {solicitud.estado === "finalizada" && solicitud.hora_total !== undefined && (
+                          <div className="flex items-start gap-3">
+                            <Clock className="w-5 h-5 text-muted-foreground mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Duración Total:</p>
+                              <p className="text-sm font-semibold text-primary">
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {solicitud.estado === "asignada" && (
@@ -225,17 +288,25 @@ export default function MisSolicitudesPage() {
                       )}
 
                       {solicitud.estado === "aceptada" && (
-                        <div className="flex gap-3 mt-6">
+                        <div className="mt-6">
                           <Button
-                            onClick={() => handleAceptar(solicitud)}
-                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            onClick={() => handleIniciarViaje(solicitud)}
+                            className="w-full bg-blue-600 hover:bg-blue-700"
                           >
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Aceptar Solicitud
+                            <PlayCircle className="w-4 h-4 mr-2" />
+                            Iniciar Viaje
                           </Button>
-                          <Button onClick={() => handleRechazar(solicitud)} variant="destructive" className="flex-1">
-                            <XCircle className="w-4 h-4 mr-2" />
-                            Rechazar
+                        </div>
+                      )}
+
+                      {solicitud.estado === "en_progreso" && (
+                        <div className="mt-6">
+                          <Button
+                            onClick={() => handleFinalizarViaje(solicitud)}
+                            className="w-full bg-purple-600 hover:bg-purple-700"
+                          >
+                            <StopCircle className="w-4 h-4 mr-2" />
+                            Finalizar Viaje
                           </Button>
                         </div>
                       )}
