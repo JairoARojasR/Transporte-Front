@@ -88,7 +88,12 @@ export async function editarSolicitudPorId(id_solicitud: string, payload: Solici
 
 export async function obtenerMisSolicitudesConductor(): Promise<Solicitud[]> {
     const res = await fetch(`${URL}/misSolicitudes`,
-        { credentials: "include" });
+        {
+            credentials: "include",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
     if (res.status === 401 || res.status === 403) throw new Error("NO_AUTORIZADO");
     const data = await res.json();
     if (!res.ok) throw new Error(data?.error || "Error al obtener solicitudes");
