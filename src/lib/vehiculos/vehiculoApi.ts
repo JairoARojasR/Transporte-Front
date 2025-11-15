@@ -1,4 +1,5 @@
-const URL = "http://localhost:5000/api/vehiculo";
+// const URL = "http://localhost:5000/api/vehiculo";
+const URL = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/vehiculo`;
 
 export type EstadoVehiculo = "disponible" | "no_disponible" | "asignado";
 export type TipoConductor = "habitual" | "eventual";

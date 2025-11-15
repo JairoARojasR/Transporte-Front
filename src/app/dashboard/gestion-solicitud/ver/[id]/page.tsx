@@ -19,7 +19,8 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function DetalleSolicitud ({ params }: PageProps){
-const router = useRouter();
-const [solicitud, setSolicitud] = useEffect<>([])
+export default function DetalleSolicitud (){
+  return (
+    <div>Detalle Solicitud Page</div>
+  )
 }

@@ -1,4 +1,6 @@
-const URL = "http://localhost:5000/api/solicitud";
+// const URL = "http://localhost:5000/api/solicitud";
+const URL = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/solicitud`;
+
 
 export type TipoLabor = "mantenimiento" | "reparacion" | "reunion" | "inspeccion_tecnica" | "emergencia" | "gestion_administrativa" | "otro";
 export type Prioridad = "baja" | "media" | "alta";

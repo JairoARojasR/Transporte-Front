@@ -1,4 +1,4 @@
-const URL = "http://localhost:5000/api/inspeccion";
+const URL = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/inspeccion`;
 
 export type Estado = "bueno" | "regular" | "malo";
 export type Combustible = "lleno" | "medio" | "bajo";
