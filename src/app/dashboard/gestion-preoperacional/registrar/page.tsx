@@ -1,4 +1,5 @@
 "use client";
+import "@/app/styles/overflow.css"
 
 import type React from "react";
 

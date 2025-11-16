@@ -48,7 +48,6 @@ const ESTADOS: { value: Estado; label: string }[] = [
   { value: "aceptada", label: "Aceptadas" },
   { value: "en_progreso", label: "En Progreso" },
   { value: "finalizada", label: "Finalizadas" },
-  { value: "cancelada", label: "Canceladas" },
   { value: "en_reasignacion", label: "En Reasignación" },
 ];
 
@@ -91,9 +90,8 @@ export default function MisSolicitudesPage() {
   };
 
   const isoAHoraEnSegundos = (iso: string): number => {
-    // Ej: "2025-11-12T21:49:44.895Z"
-    const [, timePartRaw] = iso.split("T"); // "21:49:44.895Z"
-    const timePart = timePartRaw.slice(0, 8); // "21:49:44"
+    const [, timePartRaw] = iso.split("T");
+    const timePart = timePartRaw.slice(0, 8);
 
     const [h, m, s] = timePart.split(":").map(Number);
 
@@ -219,7 +217,7 @@ export default function MisSolicitudesPage() {
     <div className="container mx-auto p-4 max-4xl bg-gradient-to-br from-slate-50 to-blue-50">
       <h1 className="text-2xl text-blue-900 font-bold">Mis solicitudes</h1>
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Estado)}>
-        <TabsList className="grid grid-cols-3 sm:grid-cols-6 gap-2 h-auto mb-5">
+        <TabsList className="w-full flex flex-wrap items-center justify-center gap-3 h-auto mb-5 rounded-xl px-3 py-2">
           {ESTADOS.map((estado) => {
             const cantidad = getSolicitudesByEstado(estado.value).length;
             return (

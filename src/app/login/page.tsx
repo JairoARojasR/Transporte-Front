@@ -35,7 +35,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
       await iniciarSesion({ correo, contrasenia: form.contrasenia });
-      router.push("../dash");
+      router.push("../dashboard");
     } catch (err: any) {
       setErrMsg(err?.message || "Error al iniciar sesión");
     } finally {
