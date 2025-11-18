@@ -69,11 +69,18 @@ const navItems: NavItem[] = [
     roles: [1]
   },
   {
-    title: "Mis Solicitudes",
+    title: "Mis Solicitudes Conductor",
     href: "/dashboard/gestion-solicitud/misSolicitudes",
     icon: FileText,
     description: "Ver mis solicitudes",
     roles: [8]
+  },
+  {
+    title: "Mis Solicitudes Solicitante",
+    href: "/dashboard/gestion-solicitud/misSolicitudesSolicitante",
+    icon: FileText,
+    description: "Ver mis solicitudes",
+    roles: [2]
   },
   {
     title: "Solicitud de Vehículo",

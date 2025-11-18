@@ -7,13 +7,36 @@ import {
   editarSolicitudPorId,
   type Solicitud,
   type Estado,
+  type Gravedad,
+  type TipoIncidente,
 } from "@/lib/solicitud/solicitudApi";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { formatearFecha, formatearHora } from "@/componentsux/formatearFecha";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  formatearFecha,
+  formatearHora,
+  formatearDuracion,
+} from "@/componentsux/formatearFecha";
 import {
   ObtenerPrioridadLabel,
   obtenerPrioridadColor,
@@ -30,6 +53,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 import {
+  AlertTriangle,
   Briefcase,
   Calendar1,
   Car,
@@ -39,6 +63,7 @@ import {
   FileText,
   MapPin,
   Package,
+  TriangleAlert,
   Users,
   XCircle,
 } from "lucide-react";
@@ -66,6 +91,14 @@ export default function MisSolicitudesPage() {
   const horaTransporte = dayjs()
     .tz("America/Bogota")
     .format("YYYY-MM-DDTHH:mm:ss.SSS[Z]");
+  const [dialogIncidenteOpen, setDialogIncidenteOpen] = useState(false);
+  const [solicitudSeleccionada, setSolicitudSeleccionada] =
+    useState<Solicitud | null>(null);
+  const [tipoIncidente, setTipoIncidente] = useState<TipoIncidente>("otro");
+  const [gravedad, setGravedad] = useState<Gravedad>("baja");
+  const [puedeContinuar, setPuedeContinuar] = useState<string>("si");
+  const [descripcionIncidente, setDescripcionIncidente] = useState("");
+  const [enviandoIncidente, setEnviandoIncidente] = useState(false);
 
   // useEffect(() => {
   //   async function cargarDatos() {
@@ -96,22 +129,6 @@ export default function MisSolicitudesPage() {
     const [h, m, s] = timePart.split(":").map(Number);
 
     return h * 3600 + m * 60 + s;
-  };
-
-  const formatearDuracion = (segundos: number): string => {
-    if (!segundos && segundos !== 0) return "N/A";
-
-    const horas = Math.floor(segundos / 3600);
-    const minutos = Math.floor((segundos % 3600) / 60);
-    const segs = segundos % 60;
-
-    const partes = [];
-
-    if (horas > 0) partes.push(`${horas} hora${horas > 1 ? "s" : ""}`);
-    if (minutos > 0) partes.push(`${minutos} minuto${minutos > 1 ? "s" : ""}`);
-    if (segs > 0) partes.push(`${segs} segundo${segs > 1 ? "s" : ""}`);
-
-    return partes.join(" ");
   };
 
   const handleAceptar = async (solicitud: Solicitud) => {
@@ -192,6 +209,61 @@ export default function MisSolicitudesPage() {
       toast.success("Has finalizado la solicitud correctamente.");
     } catch (error) {
       toast.warning("No se pudo finalizar la solicitud.");
+    }
+  };
+
+  const abrirDialogIncidente = (solicitud: Solicitud) => {
+    setSolicitudSeleccionada(solicitud);
+    setTipoIncidente("otro");
+    setGravedad("baja");
+    setPuedeContinuar("si");
+    setDescripcionIncidente("");
+    setDialogIncidenteOpen(true);
+  };
+
+  const handleRegistrarIncidente = async () => {
+    if (!solicitudSeleccionada) return;
+
+    if (!descripcionIncidente.trim()) {
+      toast.warning("Por favor ingresa una descripción del incidente.");
+      return;
+    }
+
+    try {
+      setEnviandoIncidente(true);
+
+      const payload: Solicitud = {
+        tipo_incidente: tipoIncidente,
+        gravedad: gravedad,
+        descripcion_incidente: descripcionIncidente,
+        puedecontinuar: puedeContinuar === "si" ? true : false,
+      };
+
+      // Si no puede continuar, cambiar estado a pendiente
+      if (puedeContinuar === "no") {
+        payload.estado = "pendiente";
+        (payload.placa_vehiculo = null), (payload.cedula_conductor = null);
+      }
+
+      await editarSolicitudPorId(
+        solicitudSeleccionada.id_solicitud!.toString(),
+        payload
+      );
+
+      mutate();
+      setDialogIncidenteOpen(false);
+
+      if (puedeContinuar === "no") {
+        toast.info(
+          "Incidente registrado. La solicitud ha pasado a estado pendiente."
+        );
+      } else {
+        toast.success("Incidente registrado correctamente.");
+      }
+    } catch (error) {
+      toast.error("Error al registrar el incidente.");
+    } finally {
+      setEnviandoIncidente(false);
     }
   };
 
@@ -374,14 +446,14 @@ export default function MisSolicitudesPage() {
                             <CheckCircle className="w-4 h-4 mr-2" />
                             Aceptar Solicitud
                           </Button>
-                          <Button
+                          {/* <Button
                             onClick={() => handleRechazar(solicitud)}
                             variant="destructive"
                             className="flex-1"
                           >
                             <XCircle className="w-4 h-4 mr-2" />
                             Rechazar
-                          </Button>
+                          </Button> */}
                         </div>
                       )}
 
@@ -398,13 +470,21 @@ export default function MisSolicitudesPage() {
                       )}
 
                       {solicitud.estado === "en_progreso" && (
-                        <div className="flex gap-3 mt-6">
+                        <div className="flex flex-col md:flex-row gap-3 mt-6">
                           <Button
                             onClick={() => handleFinalizar(solicitud)}
                             className="flex-1 bg-green-600 hover:bg-green-700"
                           >
                             <CircleStop className="w-4 h-4 mr-2" />
                             Finalizar Viaje
+                          </Button>
+
+                          <Button
+                            onClick={() => abrirDialogIncidente(solicitud)}
+                            className="flex-1 bg-orange-600 hover:bg-orange-700"
+                          >
+                            <TriangleAlert className="w-4 h-4 mr-2" />
+                            Registrar Incidente
                           </Button>
                         </div>
                       )}
@@ -431,6 +511,118 @@ export default function MisSolicitudesPage() {
           );
         })}
       </Tabs>
+
+      <Dialog open={dialogIncidenteOpen} onOpenChange={setDialogIncidenteOpen}>
+        <DialogContent className="w-full max-w-xs sm:max-w-xs md:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Registrar Incidente o Novedad</DialogTitle>
+            <DialogDescription>
+              Completa la información del incidente ocurrido durante el
+              transporte.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Tipo de Incidente */}
+            <div className="space-y-2">
+              <Label>Tipo de Incidente</Label>
+              <Select
+                value={tipoIncidente}
+                onValueChange={(value) =>
+                  setTipoIncidente(value as TipoIncidente)
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona el tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="accidente">Accidente</SelectItem>
+                  <SelectItem value="falla_mecanica">Falla Mecánica</SelectItem>
+                  <SelectItem value="retraso">Retraso</SelectItem>
+                  <SelectItem value="otro">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Gravedad */}
+            <div className="space-y-2">
+              <Label>Gravedad</Label>
+              <Select
+                value={gravedad}
+                onValueChange={(value) => setGravedad(value as Gravedad)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona la gravedad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="baja">Baja</SelectItem>
+                  <SelectItem value="media">Media</SelectItem>
+                  <SelectItem value="alta">Alta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* ¿Puede continuar el viaje? */}
+            <div className="space-y-2">
+              <Label>¿Puede continuar el viaje?</Label>
+              <RadioGroup
+                value={puedeContinuar}
+                onValueChange={setPuedeContinuar}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="si" id="si" />
+                  <Label htmlFor="si" className="font-normal cursor-pointer">
+                    Sí
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="no" />
+                  <Label htmlFor="no" className="font-normal cursor-pointer">
+                    No
+                  </Label>
+                </div>
+              </RadioGroup>
+              {puedeContinuar === "no" && (
+                <p className="text-sm text-orange-600">
+                  La solicitud pasará a estado pendiente
+                </p>
+              )}
+            </div>
+
+            {/* Descripción */}
+
+            <div className="space-y-2">
+              <Label>Descripción del Incidente</Label>
+              <Textarea
+                placeholder="Describe detalladamente lo sucedido..."
+                value={descripcionIncidente}
+                onChange={(e) => setDescripcionIncidente(e.target.value)}
+                rows={4}
+                className="placeholder:text-sm"
+                // className="placeholder:text-sm sm:placeholder:text-sm md:placeholder:text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setDialogIncidenteOpen(false)}
+              className="flex-1"
+              disabled={enviandoIncidente}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleRegistrarIncidente}
+              className="flex-1"
+              disabled={enviandoIncidente}
+            >
+              {enviandoIncidente ? "Registrando..." : "Registrar"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

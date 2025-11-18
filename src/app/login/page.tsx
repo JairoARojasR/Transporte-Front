@@ -8,7 +8,7 @@ import { iniciarSesion, LoginPayload } from "@/lib/login/loginApi";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [showPass, setShowPass] = useState(false); //ver la contraseña
+  const [showPass, setShowPass] = useState(false); 
   const [form, setForm] = useState<LoginPayload>({
     cedula: 0,
     contrasenia: "",

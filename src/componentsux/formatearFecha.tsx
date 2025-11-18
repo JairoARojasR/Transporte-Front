@@ -21,3 +21,19 @@ export const formatearFecha = (fecha?: string | null) => {
       timeZone: "UTC",
     });
   };
+
+  export const formatearDuracion = (segundos: number): string => {
+    if (!segundos && segundos !== 0) return "N/A";
+
+    const horas = Math.floor(segundos / 3600);
+    const minutos = Math.floor((segundos % 3600) / 60);
+    const segs = segundos % 60;
+
+    const partes = [];
+
+    if (horas > 0) partes.push(`${horas} hora${horas > 1 ? "s" : ""}`);
+    if (minutos > 0) partes.push(`${minutos} minuto${minutos > 1 ? "s" : ""}`);
+    if (segs > 0) partes.push(`${segs} segundo${segs > 1 ? "s" : ""}`);
+
+    return partes.join(" ");
+  };

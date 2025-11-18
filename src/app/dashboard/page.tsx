@@ -22,7 +22,7 @@ export default function DashboardPage() {
       title: "Preoperacional",
       description: "Registros de inspección",
       icon: ClipboardCheck,
-      href: "/dashboard/registro-preoperacional",
+      href: "/dashboard/gestion-preoperacional",
       color: "text-purple-600",
     },
    

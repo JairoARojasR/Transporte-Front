@@ -324,6 +324,7 @@ export default function GestionSolicitud() {
                   <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
                     Horas actividad
                   </th>
+                  
                   <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
                     Acciones
                   </th>

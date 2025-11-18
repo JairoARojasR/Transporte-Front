@@ -5,7 +5,8 @@ const URL = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/s
 export type TipoLabor = "mantenimiento" | "reparacion" | "reunion" | "inspeccion_tecnica" | "emergencia" | "gestion_administrativa" | "otro";
 export type Prioridad = "baja" | "media" | "alta";
 export type Estado = "pendiente" | "asignada" | "aceptada" | "en_progreso" | "finalizada" | "cancelada" | "en_reasignacion";
-
+export type TipoIncidente = "accidente" | "falla_mecanica" | "retraso" | "otro"
+export type Gravedad = "baja" | "media" | "alta";
 export interface Solicitud {
     id_solicitud?: number
     cedula_solicitante?: number
@@ -25,6 +26,10 @@ export interface Solicitud {
     hora_inicio_transporte?: string | null
     hora_fin_transporte?: string | null
     hora_total?: number | null
+    tipo_incidente?: TipoIncidente,
+    gravedad?: Gravedad,
+    descripcion_incidente?: string | null,
+    puedecontinuar?: boolean | null,
     usuario_solicitud_cedula_solicitanteTousuario?: UsuarioSolicitudCedulaSolicitanteTousuario
     usuario_solicitud_cedula_conductorTousuario?: UsuarioSolicitudCedulaConductorTousuario | null
     vehiculo?: Vehiculo | null
