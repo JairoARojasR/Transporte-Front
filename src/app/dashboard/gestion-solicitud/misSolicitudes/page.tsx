@@ -204,10 +204,15 @@ export default function MisSolicitudesPage() {
   }
 
   if (error) {
+    const message =
+      (error as any)?.message === "NO_AUTORIZADO"
+        ? "No tienes permiso para ver estas solicitudes."
+        : (error as any)?.message || "Error al cargar tus solicitudes.";
+
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="p-6">
-          <p className="text-red-600">{error}</p>
+          <p className="text-red-600">{message}</p>
         </Card>
       </div>
     );
