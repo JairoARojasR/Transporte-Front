@@ -10,7 +10,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [showPass, setShowPass] = useState(false); //ver la contraseña
   const [form, setForm] = useState<LoginPayload>({
-    cedula: 0,
+    correo: "",
     contrasenia: "",
   });
   const [loading, setLoading] = useState(false);
@@ -26,15 +26,15 @@ export default function LoginPage() {
     setErrMsg(null);
 
     // Validación mínima
-    const cedula = form.cedula.toString().trim();
-    if (!cedula || !form.contrasenia) {
-      setErrMsg("Cédula y contraseña son obligatorios");
+    const correo = form.correo.trim().toLowerCase();
+    if (!correo || !form.contrasenia) {
+      setErrMsg("Correo y contraseña son obligatorios");
       return;
     }
 
     try {
       setLoading(true);
-      await iniciarSesion({ cedula: Number(cedula), contrasenia: form.contrasenia });
+      await iniciarSesion({ correo, contrasenia: form.contrasenia });
       router.push("../dashboard");
     } catch (err: any) {
       setErrMsg(err?.message || "Error al iniciar sesión");
@@ -67,12 +67,11 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="w-full space-y-4">
             <div className="relative">
               <Input
-                type="number"
-                min={0}
-                placeholder="Ingrese Cédula"
+                type="email"
+                placeholder="Ingrese Correo"
                 className="pl-10 py-6 bg-gray-100 border-2 border-gray-400"
-                value={form.cedula || ""}
-                onChange={onChange("cedula")}
+                value={form.correo}
+                onChange={onChange("correo")}
               />
 
               <svg
