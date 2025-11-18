@@ -35,7 +35,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
       await iniciarSesion({ correo, contrasenia: form.contrasenia });
-      router.push("../dashboard");
+      router.push("../dashboard/gestion-vehiculos");
     } catch (err: any) {
       setErrMsg(err?.message || "Error al iniciar sesión");
     } finally {
