@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
 import {
   Sheet,
   SheetContent,
@@ -31,14 +29,6 @@ import {
   Footprints,
 } from "lucide-react";
 import { cerrarSesion } from "@/lib/login/loginApi";
-import { useLogout } from "@/componentsux/dashboard/useLogout";
-
-interface JwtPayload {
-  sub: string; // cédula
-  rol: number;
-  iat?: number;
-  exp?: number;
-}
 interface NavItem {
   title: string;
   href: string;
@@ -59,78 +49,72 @@ const navItems: NavItem[] = [
     href: "/dashboard/gestion-vehiculos",
     icon: Truck,
     description: "Crear y editar vehículos",
-    roles: [1],
   },
   {
     title: "Gestión de Solicitudes",
     href: "/dashboard/gestion-solicitud",
     icon: FolderOpen,
     description: "Administrar solicitudes",
-    roles: [1]
   },
   {
     title: "Mis Solicitudes",
     href: "/dashboard/gestion-solicitud/misSolicitudes",
     icon: FileText,
     description: "Ver mis solicitudes",
-    roles: [8]
   },
   {
     title: "Solicitud de Vehículo",
     href: "/dashboard/gestion-solicitud/registrar",
     icon: FileText,
     description: "Nueva solicitud",
-    roles: [2],
   },
   {
     title: "Registro Preoperacional",
     href: "/dashboard/gestion-preoperacional",
     icon: ClipboardCheck,
     description: "Inspección de vehículo",
-    roles: [1],
   },
   {
     title: "Registro Preoperacional",
     href: "/dashboard/gestion-preoperacional/registrar",
     icon: ClipboardCheck,
     description: "Registro Inspeccion",
-    roles: [8],
   },
-  // {
-  //   title: "Gestión de Usuarios",
-  //   href: "/dashboard/usuarios",
-  //   icon: Users,
-  //   description: "Administrar usuarios",
-  // },
+  {
+    title: "Gestión de Usuarios",
+    href: "/dashboard/usuarios",
+    icon: Users,
+    description: "Administrar usuarios",
+  },
 ];
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const [rol, setRol] = useState<number | null>(null);
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const firstLinkRef = useRef<HTMLAnchorElement>(null);
 
-  useEffect(() => {
+  const handleLogout = async () => {
+    setLoading(true);
+    setErr(null);
+    setMsg(null);
     try {
-      const token = Cookies.get("access_token");
-      if (!token) return;
-
-      const decoded = jwtDecode<JwtPayload>(token);
-      console.log("info", decoded);
-      setRol(decoded.rol);
-    } catch (e) {
-      console.error("Error decodificando token", e);
-      setRol(null);
+      const r = await cerrarSesion(); // hace POST y borra la cookie en backend
+      setMsg(r.mensaje || "Sesión cerrada");
+      // Redirige al login, por ejemplo después de 1s:
+      setTimeout(() => router.push("/login"), 800);
+    } catch (e: any) {
+      setErr(e?.message || "Error al cerrar sesión");
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  const visibleItems = navItems.filter((item) => {
-    if (!item.roles || item.roles.length === 0) return true;
-    if (rol === null) return false;
-    return item.roles.includes(rol);
-  });
+  };
 
   return (
     <nav className="flex flex-col gap-1">
-      {visibleItems.map((item) => {
+      {navItems.map((item) => {
         const Icon = item.icon;
         const isActive =
           pathname === item.href || pathname?.startsWith(item.href + "/");
@@ -172,11 +156,6 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function Sidebar() {
-  const router = useRouter();
-  const { logout, loading } = useLogout();
-  const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-
   return (
     <>
       {/* Desktop Sidebar */}
@@ -195,13 +174,14 @@ export function Sidebar() {
         </div>
         <div className="border-t p-4">
           <Button
-            onClick={logout}
-            disabled={loading}
             variant="ghost"
             className="w-full justify-start gap-2"
+            asChild
           >
-            <LogOut className="h-5 w-5" />
-            {loading ? "Cerrando..." : "Cerrar sesión"}
+            <Link href="/logout">
+              <LogOut className="h-5 w-5" />
+              Cerrar Sesión
+            </Link>
           </Button>
         </div>
       </aside>
@@ -211,7 +191,6 @@ export function Sidebar() {
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
-  const { logout, loading } = useLogout();
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -244,8 +223,16 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
           >
             <Truck className="h-6 w-6" />
-            <span>Transporte</span>
+            <span>TransportApp</span>
           </Link>
+          {/* <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen(false)}
+            aria-label="Cerrar menú"
+          >
+            <Footprints className="h-5 w-5" />
+          </Button> */}
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           <NavLinks onNavigate={() => setOpen(false)} />
@@ -254,15 +241,13 @@ export function MobileNav() {
           <Button
             variant="ghost"
             className="w-full justify-start gap-2"
-            onClick={async () => {
-              await logout();
-              setOpen(false);
-            } 
-          }
-          disabled={loading}
+            asChild
+            onClick={() => setOpen(false)}
           >
+            <Link href="/logout">
               <LogOut className="h-5 w-5" />
-              {loading ? "Cerrando..." : "Cerrar sesión"}
+              Cerrar Sesión
+            </Link>
           </Button>
         </div>
       </SheetContent>
@@ -275,7 +260,7 @@ export function DashboardHeader() {
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 lg:px-6">
       <MobileNav />
       <div className="flex-1">
-        <h1 className="text-lg font-semibold lg:hidden">Transporte</h1>
+        <h1 className="text-lg font-semibold lg:hidden">TransportApp</h1>
       </div>
     </header>
   );
