@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { obtenerVehiculos, obtenerVehiculoPorRegistroInspeccion, type Vehiculo } from "@/lib/vehiculos/vehiculoApi";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,11 +16,19 @@ import { Badge } from "@/components/ui/badge";
 import { Truck, MoreVertical, Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 
+interface JwtPayload {
+  sub: string; // cédula
+  rol: number;
+  iat?: number;
+  exp?: number;
+}
 export default function GestionVehiculos() {
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [conductor, setConductor] = useState<Vehiculo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rol, setRol] = useState<number | null>(null);
+
 
   useEffect(() => {
     async function cargarDatos() {
@@ -34,6 +44,20 @@ export default function GestionVehiculos() {
       }
     }
     cargarDatos();
+  }, []);
+
+   useEffect(() => {
+    try {
+      const token = Cookies.get("access_token");
+      if (!token) return;
+
+      const decoded = jwtDecode<JwtPayload>(token);
+      console.log("info decode", decoded);
+      setRol(decoded.rol);
+    } catch (e) {
+      console.error("Error decodificando token", e);
+      setRol(null);
+    }
   }, []);
 
   useEffect(() => {
