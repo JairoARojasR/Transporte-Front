@@ -114,7 +114,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
       if (!token) return;
 
       const decoded = jwtDecode<JwtPayload>(token);
-      console.log("info", decoded);
+      console.log("info", decoded  || "No se pudo decodificar el token");
       setRol(decoded.rol);
     } catch (e) {
       console.error("Error decodificando token", e);
