@@ -108,21 +108,33 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const [rol, setRol] = useState<number | null>(null);
 
+  // useEffect(() => {
+  //   try {
+  //     const token = Cookies.get("access_token");
+  //     if (!token) return;
+
+  //     const decoded = jwtDecode<JwtPayload>(token);
+  //     console.log("info", decoded  || "No se pudo decodificar el token");
+  //     setRol(decoded.rol);
+  //   } catch (e) {
+  //     console.error("Error decodificando token", e);
+  //     setRol(null);
+  //   }
+  // }, []);
+
+
   useEffect(() => {
-    try {
-      const token = Cookies.get("access_token");
-      if (!token) return;
+  try {
+    const rolStr = Cookies.get("user_rol");
+    if (!rolStr) return;
+    const parsedRol = Number(rolStr);
+    if (!isNaN(parsedRol)) setRol(parsedRol);
+  } catch (e) {
+    console.error("Error leyendo user_rol", e);
+    setRol(null);
+  }
+}, []);
 
-      const decoded = jwtDecode<JwtPayload>(token);
-      console.log("info", decoded  || "No se pudo decodificar el token");
-      setRol(decoded.rol);
-    } catch (e) {
-      console.error("Error decodificando token", e);
-      setRol(null);
-    }
-  }, []);
-
-  
   const visibleItems = navItems.filter((item) => {
     if (!item.roles || item.roles.length === 0) return true;
     if (rol === null) return false;

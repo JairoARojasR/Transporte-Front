@@ -1,5 +1,6 @@
 // hooks/useLogout.ts
 "use client";
+import Cookies from "js-cookie";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,6 +18,7 @@ export function useLogout() {
     } catch (e) {
       console.error(e);
     } finally {
+    Cookies.remove("user_rol");
       setLoading(false);
     }
   };
