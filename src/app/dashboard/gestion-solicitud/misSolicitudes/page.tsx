@@ -236,7 +236,7 @@ export default function MisSolicitudesPage() {
         tipo_incidente: tipoIncidente,
         gravedad: gravedad,
         descripcion_incidente: descripcionIncidente,
-        puedecontinuar: puedeContinuar === "si" ? true : false,
+        puede_continuar: puedeContinuar === "si" ? true : false,
       };
 
       // Si no puede continuar, cambiar estado a pendiente

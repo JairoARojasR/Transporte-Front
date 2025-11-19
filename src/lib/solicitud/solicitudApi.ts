@@ -29,7 +29,7 @@ export interface Solicitud {
     tipo_incidente?: TipoIncidente,
     gravedad?: Gravedad,
     descripcion_incidente?: string | null,
-    puedecontinuar?: boolean | null,
+    puede_continuar?: boolean | null,
     usuario_solicitud_cedula_solicitanteTousuario?: UsuarioSolicitudCedulaSolicitanteTousuario
     usuario_solicitud_cedula_conductorTousuario?: UsuarioSolicitudCedulaConductorTousuario | null
     vehiculo?: Vehiculo | null
