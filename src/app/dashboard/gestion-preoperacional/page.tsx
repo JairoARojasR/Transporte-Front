@@ -21,6 +21,7 @@ import dayjs from "dayjs";
 import { es } from "date-fns/locale";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
+import { formatearFecha, formatearHora } from "@/componentsux/formatearFecha";
 
 export default function GestionPreoperacional() {
   const [preoperacional, setPreoperacional] = useState<Preoperacional[]>([]);
@@ -239,12 +240,89 @@ export default function GestionPreoperacional() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
-
                     </tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
+
+          <div className="md:hidden space-y-4 p-4">
+            {preoperacional.map((preo) => {
+              return (
+                <Card key={preo.id_inspeccion} className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center justify-center gap-3">
+                      <Truck className="w-5 h-5 text-blue-600" />
+                      <span>
+                        {preo.placa_vehiculo} {"-"}{" "}
+                        {obtenerTipoLabel(preo.vehiculo?.tipo_vehiculo)}
+                      </span>
+                    </div>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <Link
+                          href={`/dashboard/gestion-preoperacional/ver/${preo.id_inspeccion}`}
+                        >
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Eye className="w-4 h-4 mr-2" />
+                            Ver Detalle
+                          </DropdownMenuItem>
+                        </Link>
+                        <Link
+                          href={`/dashboard/gestion-vehiculos/editarv/${preo.id_inspeccion}`}
+                        >
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                        </Link>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div>
+                    <Badge
+                      variant={"outline"}
+                      className={`${obtenerEstadoColor(preo.vehiculo?.estado)}`}
+                    >
+                      {obtenerEstadoLabel(preo.vehiculo?.estado)}
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <p className="text-muted-foreground text-xs">Conductor</p>
+                    <p className="font-medium">{preo.usuario?.nombre}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-muted-foreground text-xs">Fecha</p>
+                    <p className="font-medium">{formatearFecha(preo.fecha)}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">
+                      Prioridad
+                    </p>
+                    <Badge variant={"estadoVehiculo"}>
+                          {preo.observaciones
+                            ? preo.observaciones
+                            : "Sin alertas"}
+                        </Badge>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </Card>
       </div>
