@@ -403,7 +403,10 @@ export default function GestionSolicitud() {
                       <td className="py-4 px-6">
                         {!asignacionActual &&
                         sol.estado !== "asignada" &&
-                        sol.estado !== "aceptada" ? (
+                        sol.estado !== "aceptada"
+                        && sol.estado !== "en_progreso"
+                        && sol.estado !== "finalizada"
+                         ? (
                           <Select
                             value={
                               sol.placa_vehiculo && vehiculoAsignado

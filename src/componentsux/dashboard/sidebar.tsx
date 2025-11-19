@@ -66,21 +66,21 @@ const navItems: NavItem[] = [
     href: "/dashboard/gestion-solicitud",
     icon: FolderOpen,
     description: "Administrar solicitudes",
-    roles: [1]
+    roles: [1],
   },
   {
     title: "Mis Solicitudes Conductor",
     href: "/dashboard/gestion-solicitud/misSolicitudes",
     icon: FileText,
     description: "Ver mis solicitudes",
-    roles: [8]
+    roles: [8],
   },
   {
     title: "Mis Solicitudes Solicitante",
     href: "/dashboard/gestion-solicitud/misSolicitudesSolicitante",
     icon: FileText,
     description: "Ver mis solicitudes",
-    roles: [2]
+    roles: [2],
   },
   {
     title: "Solicitud de Vehículo",
@@ -129,18 +129,17 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   //   }
   // }, []);
 
-
   useEffect(() => {
-  try {
-    const rolStr = Cookies.get("user_rol");
-    if (!rolStr) return;
-    const parsedRol = Number(rolStr);
-    if (!isNaN(parsedRol)) setRol(parsedRol);
-  } catch (e) {
-    console.error("Error leyendo user_rol", e);
-    setRol(null);
-  }
-}, []);
+    try {
+      const rolStr = Cookies.get("user_rol");
+      if (!rolStr) return;
+      const parsedRol = Number(rolStr);
+      if (!isNaN(parsedRol)) setRol(parsedRol);
+    } catch (e) {
+      console.error("Error leyendo user_rol", e);
+      setRol(null);
+    }
+  }, []);
 
   const visibleItems = navItems.filter((item) => {
     if (!item.roles || item.roles.length === 0) return true;
@@ -161,11 +160,11 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              "hover:bg-accent hover:text-accent-foreground",
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ",
+              "hover:bg-[#E7F1FF]",
               isActive
-                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                : "text-muted-foreground"
+                ? "bg-blue-600 text-gray-200 hover:bg-blue-700 transition-colors"
+                : "text-[#0A58CA] hover:text-[#0B5ED7] transition-colors",
             )}
           >
             <Icon className="h-5 w-5 shrink-0" />
@@ -176,8 +175,8 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   className={cn(
                     "text-xs",
                     isActive
-                      ? "text-primary-foreground/80"
-                      : "text-muted-foreground"
+                      ? "text-gray-900"
+                      : "text-[#FF8800]"
                   )}
                 >
                   {item.description}
@@ -218,7 +217,7 @@ export function Sidebar() {
             onClick={logout}
             disabled={loading}
             variant="ghost"
-            className="w-full justify-start gap-2"
+            className="w-full justify-start gap-2 cursor-pointer"
           >
             <LogOut className="h-5 w-5" />
             {loading ? "Cerrando..." : "Cerrar sesión"}
@@ -277,12 +276,11 @@ export function MobileNav() {
             onClick={async () => {
               await logout();
               setOpen(false);
-            } 
-          }
-          disabled={loading}
+            }}
+            disabled={loading}
           >
-              <LogOut className="h-5 w-5" />
-              {loading ? "Cerrando..." : "Cerrar sesión"}
+            <LogOut className="h-5 w-5" />
+            {loading ? "Cerrando..." : "Cerrar sesión"}
           </Button>
         </div>
       </SheetContent>
