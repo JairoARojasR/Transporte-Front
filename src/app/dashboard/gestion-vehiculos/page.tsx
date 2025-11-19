@@ -167,7 +167,7 @@ export default function GestionVehiculos() {
               </h1>
               <p className="text-slate-600">
                 Administra la flota de vehículos para el transporte de los
-                empleados.
+                empleados. xd
               </p>
             </div>
             <Link href="/dashboard/gestion-vehiculos/registrar">

@@ -76,33 +76,33 @@ export default function GestionSolicitud() {
     };
   }>({});
 
-   useEffect(() => {
-    if (!solicitud.length) return
+  useEffect(() => {
+    if (!solicitud.length) return;
 
-    const nuevaAsignacionPendiente = { ...asignacionPendiente }
-    let huboCambios = false
+    const nuevaAsignacionPendiente = { ...asignacionPendiente };
+    let huboCambios = false;
 
     Object.keys(asignacionPendiente).forEach((idStr) => {
-      const id = Number.parseInt(idStr)
-      const solicitudActual = solicitud.find((s) => s.id_solicitud === id)
+      const id = Number.parseInt(idStr);
+      const solicitudActual = solicitud.find((s) => s.id_solicitud === id);
 
       if (!solicitudActual || solicitudActual.estado !== "asignada") {
-        delete nuevaAsignacionPendiente[id]
-        huboCambios = true
+        delete nuevaAsignacionPendiente[id];
+        huboCambios = true;
       } else if (
         solicitudActual.cedula_conductor &&
-        solicitudActual.cedula_conductor !== asignacionPendiente[id]?.cedulaConductor
+        solicitudActual.cedula_conductor !==
+          asignacionPendiente[id]?.cedulaConductor
       ) {
-        delete nuevaAsignacionPendiente[id]
-        huboCambios = true
+        delete nuevaAsignacionPendiente[id];
+        huboCambios = true;
       }
-    })
+    });
 
     if (huboCambios) {
-      setAsignacionPendiente(nuevaAsignacionPendiente)
+      setAsignacionPendiente(nuevaAsignacionPendiente);
     }
-  }, [solicitud])
-
+  }, [solicitud]);
 
   const handleRefresh = async () => {
     toast.info("Actualizando... Cargando nuevas solicitudes");
@@ -281,7 +281,11 @@ export default function GestionSolicitud() {
                 Gestiona las solicitudes de transporte de empleados.
               </p>
             </div>
-            <Button onClick={handleRefresh} variant="register" className="gap-2">
+            <Button
+              onClick={handleRefresh}
+              variant="register"
+              className="gap-2"
+            >
               <RefreshCcw className="h-4 w-4" />
               Refrescar
             </Button>
@@ -290,9 +294,12 @@ export default function GestionSolicitud() {
 
         <Card className="shadow-xl border-0 overflow-hidden">
           <div className="p-6 border-b bg-white">
-            <h2 className="text-xl font-semibold text-slate-900">Lista de Registros</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              Lista de Registros
+            </h2>
             <p className="text-sm text-slate-600 mt-1">
-              Se actualiza automáticamente cada 10 segundos. Total: {solicitud.length} solicitudes
+              Se actualiza automáticamente cada 10 segundos. Total:{" "}
+              {solicitud.length} solicitudes
             </p>
           </div>
 
@@ -324,7 +331,7 @@ export default function GestionSolicitud() {
                   <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
                     Horas actividad
                   </th>
-                  
+
                   <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700">
                     Acciones
                   </th>
@@ -403,10 +410,9 @@ export default function GestionSolicitud() {
                       <td className="py-4 px-6">
                         {!asignacionActual &&
                         sol.estado !== "asignada" &&
-                        sol.estado !== "aceptada"
-                        && sol.estado !== "en_progreso"
-                        && sol.estado !== "finalizada"
-                         ? (
+                        sol.estado !== "aceptada" &&
+                        sol.estado !== "en_progreso" &&
+                        sol.estado !== "finalizada" ? (
                           <Select
                             value={
                               sol.placa_vehiculo && vehiculoAsignado
@@ -560,6 +566,230 @@ export default function GestionSolicitud() {
                 })}
               </tbody>
             </table>
+          </div>
+
+          <div className="md:hidden space-y-4 p-4">
+            {solicitud.map((sol) => {
+              const vehiculoAsignado = vehiculos.find(
+                (v) => v.placa === sol.placa_vehiculo
+              );
+              const asignacionActual = asignacionPendiente[sol.id_solicitud!];
+
+              return (
+                <Card key={sol.id_solicitud} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">
+                        {
+                          sol.usuario_solicitud_cedula_solicitanteTousuario
+                            ?.nombre
+                        }
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {
+                          sol.usuario_solicitud_cedula_solicitanteTousuario
+                            ?.telefono
+                        }
+                      </p>
+                    </div>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <Link
+                          href={`/dashboard/gestion-solicitud/ver/${sol.id_solicitud}`}
+                        >
+                          <DropdownMenuItem className="cursor-pointer">
+                            <Eye className="w-4 h-4 mr-2" />
+                            Ver Detalle
+                          </DropdownMenuItem>
+                        </Link>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-muted-foreground text-xs">Fecha</p>
+                      <p className="font-medium">{formatearFecha(sol.fecha)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs">Hora</p>
+                      <p className="font-medium">{formatearHora(sol.hora)}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Ruta</p>
+                    <p className="text-xs font-medium">{sol.origen}</p>
+                    <p className="text-sm text-muted-foreground"> → {sol.destino}</p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-1">Prioridad</p>
+                      <Badge
+                        variant="outline"
+                        className={`${obtenerPrioridadColor(sol.prioridad)}`}
+                      >
+                        {ObtenerPrioridadLabel(sol.prioridad)}
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-1">
+                        Estado
+                      </p>
+                      <Badge
+                        variant="outline"
+                        className={`${obtenerEstadoSolicitudColor(
+                          sol.estado!
+                        )}`}
+                      >
+                        {ObtenerEstadoSolicitudLabel(sol.estado!)}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t">
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-2">
+                        Vehículo
+                      </p>
+                      {!asignacionActual &&
+                      sol.estado !== "asignada" &&
+                      sol.estado !== "aceptada" &&
+                      sol.estado !== "en_progreso" &&
+                      sol.estado !== "finalizada" ? (
+                        <Select
+                          value={
+                            sol.placa_vehiculo && vehiculoAsignado
+                              ? sol.placa_vehiculo
+                              : undefined
+                          }
+                          onValueChange={(value) => {
+                            const vehiculoSeleccionado = vehiculos.find(
+                              (v) => v.placa === value
+                            );
+                            if (
+                              vehiculoSeleccionado &&
+                              vehiculoSeleccionado.conductor_sugerido &&
+                              sol.id_solicitud
+                            ) {
+                              handleSeleccionarVehiculo(
+                                sol.id_solicitud,
+                                vehiculoSeleccionado.placa,
+                                vehiculoSeleccionado.conductor_sugerido.nombre,
+                                vehiculoSeleccionado.conductor_sugerido.cedula
+                              );
+                            }
+                          }}
+                          disabled={
+                            asignandoVehiculo === sol.id_solicitud ||
+                            vehiculos.length === 0
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue
+                              placeholder={
+                                vehiculos.length === 0
+                                  ? "Sin vehículos"
+                                  : "Asignar vehículo"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {vehiculos.map((vehiculo) => (
+                              <SelectItem
+                                key={vehiculo.placa}
+                                value={vehiculo.placa}
+                              >
+                                {vehiculo.placa} -{" "}
+                                {vehiculo.conductor_sugerido?.nombre ||
+                                  "Sin conductor"}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <p className="font-medium">
+                          {asignacionActual?.placa ||
+                            sol.placa_vehiculo ||
+                            "Sin asignar"}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <p className="text-muted-foreground text-xs mb-2">
+                        Conductor
+                      </p>
+                      {asignacionActual ? (
+                        <div className="space-y-2">
+                          <p className="font-medium">
+                            {asignacionActual.nombreConductor}
+                          </p>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 border-green-500 text-green-600 hover:bg-green-50 bg-transparent"
+                              onClick={() =>
+                                handleConfirmarAsignacion(sol.id_solicitud!)
+                              }
+                              disabled={asignandoVehiculo === sol.id_solicitud}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Confirmar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 border-red-500 text-red-600 hover:bg-red-50 bg-transparent"
+                              onClick={() =>
+                                handleCancelarAsignacion(sol.id_solicitud!)
+                              }
+                              disabled={asignandoVehiculo === sol.id_solicitud}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="font-medium">
+                          {sol.usuario_solicitud_cedula_conductorTousuario
+                            ?.nombre || (
+                            <span className="text-muted-foreground">
+                              Sin asignar
+                            </span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                    {(sol.hora_inicio_transporte ||
+                      sol.hora_fin_transporte) && (
+                      <div>
+                        <p className="text-muted-foreground text-xs mb-1">
+                          Horas de actividad
+                        </p>
+                        <p className="text-sm">
+                          {formatearHora(sol.hora_inicio_transporte)} -{" "}
+                          {formatearHora(sol.hora_fin_transporte)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </Card>
       </div>
