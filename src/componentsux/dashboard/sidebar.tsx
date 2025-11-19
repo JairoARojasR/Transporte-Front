@@ -175,7 +175,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                   className={cn(
                     "text-xs",
                     isActive
-                      ? "text-gray-900"
+                      ? "text-[#F5F8FF]"
                       : "text-[#FF8800]"
                   )}
                 >
