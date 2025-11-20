@@ -242,7 +242,7 @@ export default function MisSolicitudesPage() {
       // Si no puede continuar, cambiar estado a pendiente
       if (puedeContinuar === "no") {
         payload.estado = "pendiente";
-        (payload.placa_vehiculo = null), (payload.cedula_conductor = null);
+        (payload.placa_vehiculo = null), (payload.cedula_conductor = null), (payload.hora_inicio_transporte = null), (payload.hora_fin_transporte = null), (payload.hora_total = null);
       }
 
       await editarSolicitudPorId(

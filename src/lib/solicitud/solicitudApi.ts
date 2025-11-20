@@ -78,6 +78,16 @@ export async function obtenerSolicitudes(): Promise<Solicitud[]> {
     return data as Solicitud[];
 }
 
+export async function obtenerSolicitudPorId(id: string): Promise<Solicitud[]> {
+  const res = await fetch(`${URL}/obtenerSolicitud/${id}`, {
+    credentials: "include",
+  })
+
+  const data = await res.json()
+  if (!res.ok) throw new Error(data?.error || "Error al obtener la solicitud")
+  return data as Solicitud[]
+}
+
 export async function editarSolicitudPorId(id_solicitud: string, payload: Solicitud): Promise<Solicitud> {
     const res = await fetch(`${URL}/editarSolicitud/${id_solicitud}`, {
         method: "PUT",
