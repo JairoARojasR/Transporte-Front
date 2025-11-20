@@ -33,6 +33,11 @@ import {
   obtenerEstadoSolicitudColor,
   ObtenerTipoLaborLabel,
 } from "@/componentsux/estadoVehiculo";
+import {
+  formatearFecha,
+  formatearHora,
+  formatearDuracion,
+} from "@/componentsux/formatearFecha";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
 import timezone from "dayjs/plugin/timezone";
@@ -79,18 +84,6 @@ export default function DetalleSolicitudPage({ params }: PageProps) {
      cargarDatos()
    }, [params])
 
-  const formatDuration = (minutos: number) => {
-    const horas = Math.floor(minutos / 60);
-    const mins = Math.floor(minutos % 60);
-    const segs = Math.floor((minutos * 60) % 60);
-
-    const partes = [];
-    if (horas > 0) partes.push(`${horas}h`);
-    if (mins > 0) partes.push(`${mins}m`);
-    if (segs > 0 || partes.length === 0) partes.push(`${segs}s`);
-
-    return partes.join(" ");
-  };
 
   if (loading) {
     return (
@@ -280,10 +273,9 @@ export default function DetalleSolicitudPage({ params }: PageProps) {
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">Fecha</p>
                   <p className="font-medium">
-                    {solicitud.fecha
-                      ? dayjs(solicitud.fecha).format("DD/MM/YYYY")
-                      : "N/A"}
+                    {formatearFecha(solicitud.fecha)}
                   </p>
+                  
                 </div>
               </div>
 
@@ -291,7 +283,7 @@ export default function DetalleSolicitudPage({ params }: PageProps) {
                 <Clock className="h-4 w-4 text-muted-foreground mt-1" />
                 <div className="flex-1">
                   <p className="text-sm text-muted-foreground">Hora</p>
-                  <p className="font-medium">{solicitud.hora || "N/A"}</p>
+                  <p className="font-medium">{formatearHora(solicitud.hora) || "N/A"}</p>
                 </div>
               </div>
 
@@ -422,9 +414,7 @@ export default function DetalleSolicitudPage({ params }: PageProps) {
                       Hora de Inicio
                     </p>
                     <p className="font-medium">
-                      {dayjs(solicitud.hora_inicio_transporte)
-                        .tz("America/Bogota")
-                        .format("DD/MM/YYYY HH:mm:ss")}
+                      {formatearHora(solicitud.hora_inicio_transporte)}
                     </p>
                   </div>
                 </div>
@@ -440,9 +430,7 @@ export default function DetalleSolicitudPage({ params }: PageProps) {
                         Hora de Finalización
                       </p>
                       <p className="font-medium">
-                        {dayjs(solicitud.hora_fin_transporte)
-                          .tz("America/Bogota")
-                          .format("DD/MM/YYYY HH:mm:ss")}
+                        {formatearHora(solicitud.hora_fin_transporte)}
                       </p>
                     </div>
                   </div>
@@ -459,7 +447,7 @@ export default function DetalleSolicitudPage({ params }: PageProps) {
                         Tiempo Total
                       </p>
                       <p className="font-medium text-lg">
-                        {formatDuration(solicitud.hora_total)}
+                        {formatearDuracion(solicitud.hora_total)}
                       </p>
                     </div>
                   </div>
@@ -518,7 +506,11 @@ export default function DetalleSolicitudPage({ params }: PageProps) {
                       ¿Puede Continuar?
                     </p>
                     <p className="font-medium capitalize">
-                      {solicitud.puede_continuar || "N/A"}
+                      {solicitud.puede_continuar === true
+                        ? "Sí"
+                        : solicitud.puede_continuar === false
+                        ? "No"
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
