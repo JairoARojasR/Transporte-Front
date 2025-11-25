@@ -48,7 +48,8 @@ export interface UsuarioSolicitudCedulaConductorTousuario {
 }
 
 export interface Vehiculo {
-    tipo_vehiculo: string
+    tipo_vehiculo?: string
+    estado?: string
 }
 
 export async function registrarSolicitud(datos: Solicitud) {

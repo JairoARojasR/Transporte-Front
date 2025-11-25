@@ -51,6 +51,7 @@ export default function SolicitudVehiculoPage() {
   const [empleados, setEmpleados] = useState<DatosUsuario[]>([]);
   const [empleadoOpen, setEmpleadoOpen] = useState(false);
   const [loadingSolicitud, setLoadingSolicitud] = useState(true);
+  const hoy = new Date().toLocaleDateString("en-CA");
 
   const [formData, setFormData] = useState<Solicitud>({
     id_solicitud: 0,
@@ -58,7 +59,7 @@ export default function SolicitudVehiculoPage() {
     telefono: "",
     placa_vehiculo: "",
     cedula_conductor: 0,
-    fecha: new Date().toISOString().split("T")[0],
+    fecha: hoy,
     hora: "",
     origen: "",
     destino: "",
@@ -146,7 +147,7 @@ export default function SolicitudVehiculoPage() {
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div>
-              <h3>Información Solicitante</h3>
+              <h3>Información Solicitante xd</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="empleado">Empleado *</Label>

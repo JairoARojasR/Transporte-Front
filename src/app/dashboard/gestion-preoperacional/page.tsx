@@ -116,7 +116,7 @@ export default function GestionPreoperacional() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-                Inspección Preoperacional
+                Inspección Preoperacional 
               </h1>
               <p className="text-slate-600">
                 Administra la flota de vehículos para el transporte de los

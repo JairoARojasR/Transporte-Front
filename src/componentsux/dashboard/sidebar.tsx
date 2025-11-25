@@ -87,7 +87,7 @@ const navItems: NavItem[] = [
     href: "/dashboard/gestion-solicitud/registrar",
     icon: FileText,
     description: "Nueva solicitud",
-    roles: [2],
+    roles: [1,2],
   },
   {
     title: "Registro Preoperacional",
@@ -101,7 +101,7 @@ const navItems: NavItem[] = [
     href: "/dashboard/gestion-preoperacional/registrar",
     icon: ClipboardCheck,
     description: "Registro Inspeccion",
-    roles: [8],
+    roles: [1,8],
   },
   // {
   //   title: "Gestión de Usuarios",

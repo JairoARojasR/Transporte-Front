@@ -73,7 +73,6 @@ const ESTADOS: { value: Estado; label: string }[] = [
   { value: "aceptada", label: "Aceptadas" },
   { value: "en_progreso", label: "En Progreso" },
   { value: "finalizada", label: "Finalizadas" },
-  { value: "en_reasignacion", label: "En Reasignación" },
 ];
 
 export default function MisSolicitudesPage() {
@@ -221,51 +220,66 @@ export default function MisSolicitudesPage() {
     setDialogIncidenteOpen(true);
   };
 
-  const handleRegistrarIncidente = async () => {
-    if (!solicitudSeleccionada) return;
+ 
+const handleRegistrarIncidente = async () => {
+  if (!solicitudSeleccionada) return;
 
-    if (!descripcionIncidente.trim()) {
-      toast.warning("Por favor ingresa una descripción del incidente.");
-      return;
-    }
+  if (!descripcionIncidente.trim()) {
+    toast.warning("Por favor ingresa una descripción del incidente.");
+    return;
+  }
 
-    try {
-      setEnviandoIncidente(true);
+  try {
+    setEnviandoIncidente(true);
 
-      const payload: Solicitud = {
-        tipo_incidente: tipoIncidente,
-        gravedad: gravedad,
-        descripcion_incidente: descripcionIncidente,
-        puede_continuar: puedeContinuar === "si" ? true : false,
-      };
+    const payload: Solicitud = {
+      tipo_incidente: tipoIncidente,
+      gravedad: gravedad,
+      descripcion_incidente: descripcionIncidente,
+      puede_continuar: puedeContinuar === "si" ? true : false,
+    };
 
-      // Si no puede continuar, cambiar estado a pendiente
-      if (puedeContinuar === "no") {
-        payload.estado = "pendiente";
-        (payload.placa_vehiculo = null), (payload.cedula_conductor = null), (payload.hora_inicio_transporte = null), (payload.hora_fin_transporte = null), (payload.hora_total = null);
-      }
+    if (puedeContinuar === "no") {
+      payload.estado = "pendiente";
+
+      await editarSolicitudPorId(
+        solicitudSeleccionada.id_solicitud!.toString(),
+        {
+          ...payload,  
+          vehiculo: { estado: "disponible" } 
+        }
+      );
+
+      payload.placa_vehiculo = null;
+      payload.cedula_conductor = null;
+      payload.hora_inicio_transporte = null;
+      payload.hora_fin_transporte = null;
+      payload.hora_total = null;
 
       await editarSolicitudPorId(
         solicitudSeleccionada.id_solicitud!.toString(),
         payload
       );
-
-      mutate();
-      setDialogIncidenteOpen(false);
-
-      if (puedeContinuar === "no") {
-        toast.info(
-          "Incidente registrado. La solicitud ha pasado a estado pendiente."
-        );
-      } else {
-        toast.success("Incidente registrado correctamente.");
-      }
-    } catch (error) {
-      toast.error("Error al registrar el incidente.");
-    } finally {
-      setEnviandoIncidente(false);
     }
-  };
+
+    mutate();
+    setDialogIncidenteOpen(false);
+
+    if (puedeContinuar === "no") {
+      toast.info(
+        "Incidente registrado. La solicitud ha pasado a estado pendiente."
+      );
+    } else {
+      toast.success("Incidente registrado correctamente.");
+    }
+  } catch (error) {
+    toast.error("Error al registrar el incidente.");
+  } finally {
+    setEnviandoIncidente(false);
+  }
+};
+
+
 
   if (isLoading) {
     return (

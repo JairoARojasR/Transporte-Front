@@ -47,12 +47,13 @@ export default function RegistroPreoperacionalPage() {
     ConductorAsignado[]
   >([]);
   const [loadingVehiculos, setLoadingVehiculos] = useState(true);
+  const hoy = new Date().toLocaleDateString("en-CA");
 
   const [formData, setFormData] = useState<Preoperacional>({
     id_inspeccion: 0,
     placa_vehiculo: "",
     cedula_conductor: 0,
-    fecha: new Date().toISOString().split("T")[0],
+    fecha: hoy,
     descanso_adecuando: false,
     consumo_alcohol: false,
     medicamentos_que_afecten_conduccion: false,

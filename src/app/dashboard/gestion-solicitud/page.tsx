@@ -51,8 +51,7 @@ export default function GestionSolicitud() {
     refreshInterval: 10000,
     revalidateOnFocus: true,
   });
-
-  const fechaHoy = new Date().toISOString().split("T")[0];
+  const fechaHoy = new Date().toLocaleDateString("en-CA");
   const { data: vehiculos = [] } = useSWR<Vehiculo[]>(
     `/api/vehiculos/${fechaHoy}`,
     () => obtenerVehiculosPorInspeccionFecha(fechaHoy),
@@ -108,6 +107,7 @@ export default function GestionSolicitud() {
     toast.info("Actualizando... Cargando nuevas solicitudes");
     await mutate();
   };
+  
 
   // useEffect(() => {
   //   async function cargarDatos() {
@@ -191,8 +191,6 @@ export default function GestionSolicitud() {
 
       await mutate();
 
-      // const solicitudActualizada = await obtenerSolicitudes();
-      // setSolicitud(solicitudActualizada);
 
       const nuevaAsignacionPendiente = { ...asignacionPendiente };
       delete nuevaAsignacionPendiente[idSolicitud];
@@ -456,6 +454,7 @@ export default function GestionSolicitud() {
                                 <SelectItem
                                   key={vehiculo.placa}
                                   value={vehiculo.placa}
+                                  
                                 >
                                   {vehiculo.placa} -{" "}
                                   {vehiculo.conductor_sugerido?.nombre ||
