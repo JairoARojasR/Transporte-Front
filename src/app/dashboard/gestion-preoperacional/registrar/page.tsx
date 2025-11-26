@@ -135,7 +135,7 @@ export default function RegistroPreoperacionalPage() {
 
   return (
     <div className="container mx-auto max-w-4xl p-5 sm:p-6 md:p-8">
-      <Card className="">
+      <Card className="mb-10">
         <CardHeader>
           <CardTitle>Registro Preoperacional</CardTitle>
           <CardDescription>
