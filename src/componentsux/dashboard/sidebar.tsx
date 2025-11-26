@@ -87,7 +87,7 @@ const navItems: NavItem[] = [
     href: "/dashboard/gestion-solicitud/registrar",
     icon: FileText,
     description: "Nueva solicitud",
-    roles: [1,2],
+    roles: [2],
   },
   {
     title: "Registro Preoperacional",
@@ -101,7 +101,7 @@ const navItems: NavItem[] = [
     href: "/dashboard/gestion-preoperacional/registrar",
     icon: ClipboardCheck,
     description: "Registro Inspeccion",
-    roles: [1,8],
+    roles: [8],
   },
   // {
   //   title: "Gestión de Usuarios",
@@ -199,8 +199,8 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:bg-muted/40">
-        <div className="flex h-16 items-center border-b px-6">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64  lg:bg-muted/40 " >
+        <div className="flex h-16 items-center border-b px-6 bg-[#3870F7] text-white ">
           <Link
             href="/dashboard"
             className="flex items-center gap-2 font-semibold text-lg"
@@ -209,10 +209,10 @@ export function Sidebar() {
             <span>Transporte</span>
           </Link>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 border-r border-gray-200 shadow-sm">
           <NavLinks />
         </div>
-        <div className="border-t p-4">
+        <div className="border-t p-4 border-r border-gray-200 shadow-sm">
           <Button
             onClick={logout}
             disabled={loading}
@@ -241,12 +241,12 @@ export function MobileNav() {
           className="lg:hidden"
           aria-label="Abrir menú"
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="text-white h-6 w-6" />
         </Button>
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="w-[280px] p-0"
+        className="w-[280px] p-0 text-white"
         onOpenAutoFocus={(e) => {
           e.preventDefault();
         }}
@@ -256,7 +256,7 @@ export function MobileNav() {
           <SheetDescription>Selecciona una sección</SheetDescription>
         </SheetHeader>
 
-        <div className="flex h-16 items-center justify-between border-b px-6">
+        <div className="flex h-16 items-center justify-between border-b px-6 bg-[#3870F7] text-white">
           <Link
             href="/dashboard"
             className="flex items-center gap-2 font-semibold text-lg"
@@ -269,10 +269,11 @@ export function MobileNav() {
         <div className="flex-1 overflow-y-auto p-4">
           <NavLinks onNavigate={() => setOpen(false)} />
         </div>
-        <div className="border-t p-4">
+
+        <div className="border-t p-4 border-r border-gray-200 shadow-sm">
           <Button
             variant="ghost"
-            className="w-full justify-start gap-2"
+            className="w-full justify-start gap-2 cursor-pointer text-black"
             onClick={async () => {
               await logout();
               setOpen(false);
@@ -290,10 +291,10 @@ export function MobileNav() {
 
 export function DashboardHeader() {
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 lg:px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-[#3870F7] px-4 lg:px-6">
       <MobileNav />
-      <div className="flex-1">
-        <h1 className="text-lg font-semibold lg:hidden">Transporte</h1>
+      <div className="text-white flex-1">
+        <h1 className=" text-lg font-semibold lg:hidden">Transporte</h1>
       </div>
     </header>
   );

@@ -147,7 +147,7 @@ export default function SolicitudVehiculoPage() {
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div>
-              <h3>Información Solicitante xd</h3>
+              <h3>Información Solicitante</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="empleado">Empleado *</Label>

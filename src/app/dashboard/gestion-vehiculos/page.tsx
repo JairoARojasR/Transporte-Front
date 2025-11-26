@@ -167,13 +167,13 @@ export default function GestionVehiculos() {
               </h1>
               <p className="text-slate-600">
                 Administra la flota de vehículos para el transporte de los
-                empleados. xd
+                empleados.
               </p>
             </div>
             <Link href="/dashboard/gestion-vehiculos/registrar">
               <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
                 <Plus className="w-4 h-4 mr-2" />
-                Nuevo Vehículo
+                Nuevo Vehículo 
               </Button>
             </Link>
           </div>

@@ -13,6 +13,8 @@ import { obtenerConductores, type DatosUsuario } from "@/lib/usuario/usuario"
 import { useRouter } from "next/navigation"
 import { Truck, Calendar, Gauge, Users } from "lucide-react"
 import { toast } from "sonner"
+import "@/app/styles/overflow.css"
+
 
 export default function CrearVehiculoPage() {
   const router = useRouter()

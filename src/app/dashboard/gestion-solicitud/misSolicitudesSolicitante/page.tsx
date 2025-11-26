@@ -50,7 +50,6 @@ const ESTADOS: { value: Estado; label: string }[] = [
   { value: "aceptada", label: "Aceptadas" },
   { value: "en_progreso", label: "En Progreso" },
   { value: "finalizada", label: "Finalizadas" },
-  { value: "en_reasignacion", label: "En Reasignación" },
 ];
 
 export default function MisSolicitudesPageSolicitante() {
