@@ -134,12 +134,12 @@ export default function RegistroPreoperacionalPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl">
-      <Card>
+    <div className="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
+      <Card className="p-4 sm:p-6 md:pb-8">
         <CardHeader>
           <CardTitle>Registro Preoperacional</CardTitle>
           <CardDescription>
-            Complete el formulario de inspección preoperacional del vehículo
+            Complete el formulario de inspección preoperacional del vehículo actualizado
           </CardDescription>
         </CardHeader>
         <CardContent>
