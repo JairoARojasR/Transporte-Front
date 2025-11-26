@@ -134,8 +134,8 @@ export default function RegistroPreoperacionalPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
-      <Card className="p-4 sm:p-6 md:pb-8">
+    <div className="container mx-auto max-w-4xl p-5 sm:p-6 md:p-8">
+      <Card className="">
         <CardHeader>
           <CardTitle>Registro Preoperacional</CardTitle>
           <CardDescription>
@@ -522,7 +522,7 @@ export default function RegistroPreoperacionalPage() {
               </div>
             </div>
 
-            <div className="flex gap-4 justify-end">
+            <div className="flex gap-4 justify-end mb-5">
               <Button
                 type="button"
                 variant="outline"
