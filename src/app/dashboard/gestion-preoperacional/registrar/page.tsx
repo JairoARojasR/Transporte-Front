@@ -54,10 +54,10 @@ export default function RegistroPreoperacionalPage() {
     placa_vehiculo: "",
     cedula_conductor: 0,
     fecha: hoy,
-    descanso_adecuando: false,
+    descanso_adecuando: true,
     consumo_alcohol: false,
     medicamentos_que_afecten_conduccion: false,
-    condiciones_fisicas_mentales: false,
+    condiciones_fisicas_mentales: true,
     soat_vigente: false,
     tecnico_mecanica: false,
     estado_llantas: "bueno",
@@ -134,7 +134,7 @@ export default function RegistroPreoperacionalPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl p-5 sm:p-6 md:p-8">
+    <div className="container mx-auto max-w-4xl p-3 sm:p-3 md:p-5">
       <Card className="mb-10">
         <CardHeader>
           <CardTitle>Registro Preoperacional</CardTitle>

@@ -67,3 +67,18 @@ export async function obtenerRegistroPreoperacional(id: string): Promise<Preoper
     if (!res.ok) throw new Error(data?.error || "Error al obtener vehiculo");
     return data as Preoperacional[];
 }
+
+export async function actualizarEstadoInspeccion(id_inspeccion: string) {
+    const res = await fetch(`${URL}/actualizar-estado/${id_inspeccion}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+        throw new Error(data?.error || "Error al actualizar el estado de la inspección");
+    }
+    return data;
+}

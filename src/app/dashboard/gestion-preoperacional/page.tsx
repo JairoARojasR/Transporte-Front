@@ -22,6 +22,7 @@ import { es } from "date-fns/locale";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 import { formatearFecha, formatearHora } from "@/componentsux/formatearFecha";
+import { actualizarEstadoInspeccion } from "@/lib/preoperacional/preoperacional";
 
 export default function GestionPreoperacional() {
   const [preoperacional, setPreoperacional] = useState<Preoperacional[]>([]);
@@ -45,6 +46,22 @@ export default function GestionPreoperacional() {
     }
     cargarDatos();
   }, []);
+
+  const handleActualizarEstado = async (idInspeccion: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await actualizarEstadoInspeccion(idInspeccion);
+      const preoperacionalData = await obtenerRegistros();
+      setPreoperacional(preoperacionalData);
+    } catch (err) {
+      setError("Error al actualizar estado");
+      console.error("Error al actualizar estado:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const obtenerEstadoLabel = (estado?: string) => {
     switch (estado) {
@@ -116,7 +133,7 @@ export default function GestionPreoperacional() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-                Inspección Preoperacional 
+                Inspección Preoperacional
               </h1>
               <p className="text-slate-600">
                 Administra la flota de vehículos para el transporte de los
@@ -229,14 +246,18 @@ export default function GestionPreoperacional() {
                                 Ver Detalle
                               </DropdownMenuItem>
                             </Link>
-                            <Link
-                              href={`/dashboard/gestion-vehiculos/editarv/${preo.id_inspeccion}`}
+
+                            <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() =>
+                                handleActualizarEstado(
+                                  preo.id_inspeccion.toString()
+                                )
+                              }
                             >
-                              <DropdownMenuItem className="cursor-pointer">
-                                <Pencil className="w-4 h-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                            </Link>
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Actualizar Estado
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
@@ -279,14 +300,17 @@ export default function GestionPreoperacional() {
                             Ver Detalle
                           </DropdownMenuItem>
                         </Link>
-                        <Link
-                          href={`/dashboard/gestion-vehiculos/editarv/${preo.id_inspeccion}`}
-                        >
-                          <DropdownMenuItem className="cursor-pointer">
-                            <Pencil className="w-4 h-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                        </Link>
+                        <DropdownMenuItem
+                              className="cursor-pointer"
+                              onClick={() =>
+                                handleActualizarEstado(
+                                  preo.id_inspeccion.toString()
+                                )
+                              }
+                            >
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Actualizar Estado
+                            </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -315,10 +339,8 @@ export default function GestionPreoperacional() {
                       Prioridad
                     </p>
                     <Badge variant={"estadoVehiculo"}>
-                          {preo.observaciones
-                            ? preo.observaciones
-                            : "Sin alertas"}
-                        </Badge>
+                      {preo.observaciones ? preo.observaciones : "Sin alertas"}
+                    </Badge>
                   </div>
                 </Card>
               );

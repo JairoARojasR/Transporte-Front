@@ -137,12 +137,11 @@ export async function exportarSolicitudesExcel(fechaInicio: string, fechaFin?: s
         throw new Error("Error al exportar solicitudes a Excel");
     }
 
-    // Obtener el blob (archivo binario del Excel)
+    
     const blob = await res.blob();
 
-    // Crear un enlace temporal para descargar el archivo
     const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
-    link.download = `solicitudes_${fechaInicio}${fechaFin ? `_${fechaFin}` : ""}.xlsx`;  // Nombre del archivo
-    link.click();  // Inicia la descarga
+    link.download = `solicitudes_${fechaInicio}${fechaFin ? `_${fechaFin}` : ""}.xlsx`;  
+    link.click();  
 }
