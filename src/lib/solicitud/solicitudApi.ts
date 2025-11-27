@@ -124,3 +124,25 @@ export async function obtenerMisSolicitudesSolicitante(): Promise<Solicitud[]> {
     if (!res.ok) throw new Error(data?.error || "Error al obtener solicitudes");
     return data;
 }
+
+export async function exportarSolicitudesExcel(fechaInicio: string, fechaFin?: string) {
+    const url = `${URL}/exportar?fechaInicio=${fechaInicio}${fechaFin ? `&fechaFin=${fechaFin}` : ""}`;
+    
+    const res = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+    });
+
+    if (!res.ok) {
+        throw new Error("Error al exportar solicitudes a Excel");
+    }
+
+    // Obtener el blob (archivo binario del Excel)
+    const blob = await res.blob();
+
+    // Crear un enlace temporal para descargar el archivo
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `solicitudes_${fechaInicio}${fechaFin ? `_${fechaFin}` : ""}.xlsx`;  // Nombre del archivo
+    link.click();  // Inicia la descarga
+}

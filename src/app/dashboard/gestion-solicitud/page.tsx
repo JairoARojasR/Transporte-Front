@@ -9,6 +9,7 @@ import {
 import {
   obtenerSolicitudes,
   editarSolicitudPorId,
+  exportarSolicitudesExcel,
   type Solicitud,
 } from "@/lib/solicitud/solicitudApi";
 
@@ -63,6 +64,8 @@ export default function GestionSolicitud() {
   // const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   // const [loading, setLoading] = useState(true);
   // const [error, setError] = useState<string | null>(null);
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
 
   const [asignandoVehiculo, setAsignandoVehiculo] = useState<number | null>(
     null
@@ -108,6 +111,19 @@ export default function GestionSolicitud() {
     await mutate();
   };
   
+  const handleExportarExcel = async () => {
+    try {
+      await exportarSolicitudesExcel(fechaInicio, fechaFin);
+      toast.success("Exportación a Excel completada");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Error al exportar solicitudes a Excel"
+      );
+      
+    }
+  }
 
   // useEffect(() => {
   //   async function cargarDatos() {
@@ -288,6 +304,28 @@ export default function GestionSolicitud() {
               Refrescar
             </Button>
           </div>
+        </div>
+
+        <div>
+          <input
+            type="date"
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+            className="mr-2 p-2 border border-gray-300 rounded"
+          />
+          <input
+            type="date"
+            value={fechaFin}
+            onChange={(e) => setFechaFin(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          />
+          <Button
+            onClick={handleExportarExcel}
+            variant="register"
+            className="ml-4"
+          >
+            Exportar a Excel
+          </Button>
         </div>
 
         <Card className="shadow-xl border-0 overflow-hidden">
