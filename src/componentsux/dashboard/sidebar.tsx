@@ -101,7 +101,7 @@ const navItems: NavItem[] = [
     href: "/dashboard/gestion-preoperacional/registrar",
     icon: ClipboardCheck,
     description: "Registro Inspeccion",
-    roles: [1,8],
+    roles: [8],
   },
   // {
   //   title: "Gestión de Usuarios",
