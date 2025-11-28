@@ -343,7 +343,7 @@ const handleRegistrarIncidente = async () => {
               ) : (
                 <div className="space-y-4">
                   {solicitudesEstado.map((solicitud) => (
-                    <Card key={solicitud.id_solicitud} className="p-4 sm:p-6 mb-6">
+                    <Card key={solicitud.id_solicitud} className="p-4 sm:p-6 mb-8">
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="font-semibold text-lg">
@@ -455,7 +455,7 @@ const handleRegistrarIncidente = async () => {
                       </div>
 
                       {solicitud.estado === "asignada" && (
-                        <div className="flex gap-3 mt-6">
+                        <div className="flex gap-3 mt-2">
                           <Button
                             onClick={() => handleAceptar(solicitud)}
                             className="flex-1 bg-green-600 hover:bg-green-700"
@@ -475,7 +475,7 @@ const handleRegistrarIncidente = async () => {
                       )}
 
                       {solicitud.estado === "aceptada" && (
-                        <div className="flex gap-3 mt-6">
+                        <div className="flex gap-3 mt-2">
                           <Button
                             onClick={() => handleIniciar(solicitud)}
                             className="flex-1 bg-blue-600 hover:bg-blue-700"
@@ -487,7 +487,7 @@ const handleRegistrarIncidente = async () => {
                       )}
 
                       {solicitud.estado === "en_progreso" && (
-                        <div className="flex flex-col md:flex-row gap-3 mt-6">
+                        <div className="flex flex-col md:flex-row gap-3 mt-2">
                           <Button
                             onClick={() => handleFinalizar(solicitud)}
                             className="flex-1 bg-green-600 hover:bg-green-700"
