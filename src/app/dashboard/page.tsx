@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { Truck, FileText, ClipboardCheck, Users } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/componentsux/dashboard/useAuth";
 import Cookies from "js-cookie";
 
 export default function DashboardPage() {

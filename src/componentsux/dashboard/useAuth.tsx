@@ -1,30 +1,34 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
-import {jwtDecode} from "jwt-decode";
 
 export const useAuth = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = Cookies.get("access_token");
+    const verificar = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/inicio/me`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
 
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode(token);
-      if (!decoded || !decoded.sub) {
-        router.push("/login"); 
+        if (!res.ok) {
+          router.push("/login");
+          return;
+        }
+      } catch (error) {
+        router.push("/login");
+        return;
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      router.push("/login"); 
-    } finally {
-      setLoading(false); 
-    }
+    };
+
+    verificar();
   }, [router]);
 
   return loading;
