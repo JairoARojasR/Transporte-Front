@@ -31,10 +31,6 @@ export default function DashboardPage() {
     }
   }, []);
 
-  if (loading) {
-    return <div className="spinner">Verificando...</div>;
-  }
-
   const cards = [
     {
       title: "Gestión de Vehículos",
