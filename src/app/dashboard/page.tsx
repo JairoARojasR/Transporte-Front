@@ -13,7 +13,6 @@ import { useAuth } from "@/componentsux/dashboard/useAuth";
 import Cookies from "js-cookie";
 
 export default function DashboardPage() {
-  const loading = useAuth();
   const [rol, setRol] = useState<number | null>(null);
 
   useEffect(() => {

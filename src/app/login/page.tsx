@@ -57,7 +57,7 @@ export default function LoginPage() {
 
         <div className="p-6 flex flex-col items-center">
           <p className="text-center text-sm text-gray-800 mb-6">
-            Ingresa tus datos para iniciar sesión actualizado
+            Ingresa tus datos para iniciar sesión actualizado prueba
           </p>
           {errMsg && (
             <p className="text-red-600 text-sm text-center font-medium mb-4">
