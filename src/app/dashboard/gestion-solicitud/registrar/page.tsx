@@ -43,12 +43,8 @@ import {
 import { toast } from "sonner";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/componentsux/dashboard/useAuth";
 
-export default function SolicitudVehiculoPage() {
-   const loading = useAuth();
-  
-
+export default function SolicitudVehiculoPage() {  
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -137,10 +133,6 @@ export default function SolicitudVehiculoPage() {
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
-  }
-
-  if (loading) {
-    return <div className="spinner">Verificando...</div>;
   }
 
   return (

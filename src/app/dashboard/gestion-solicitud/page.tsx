@@ -12,7 +12,6 @@ import {
   exportarSolicitudesExcel,
   type Solicitud,
 } from "@/lib/solicitud/solicitudApi";
-import { useAuth } from "@/componentsux/dashboard/useAuth";
 
 import { formatearFecha, formatearHora } from "@/componentsux/formatearFecha";
 
@@ -82,8 +81,6 @@ export default function GestionSolicitudDos() {
   const [asignandoVehiculo, setAsignandoVehiculo] = useState<number | null>(
     null
   );
-
-  const loading = useAuth();
   
 
   const [asignacionPendiente, setAsignacionPendiente] = useState<{
@@ -824,10 +821,6 @@ export default function GestionSolicitudDos() {
         </div>
       </div>
     );
-  }
-
-  if (loading) {
-    return <div className="spinner">Verificando...</div>;
   }
 
   if (error) {

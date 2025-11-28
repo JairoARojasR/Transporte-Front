@@ -14,11 +14,9 @@ import { useRouter } from "next/navigation"
 import { Truck, Calendar, Gauge, Users } from "lucide-react"
 import { toast } from "sonner"
 import "@/app/styles/overflow.css"
-import { useAuth } from "@/componentsux/dashboard/useAuth";
 
 
 export default function CrearVehiculoPage() {
-  const loading = useAuth();
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [conductores, setConductores] = useState<DatosUsuario[]>([])
@@ -101,10 +99,6 @@ export default function CrearVehiculoPage() {
         </div>
       </div>
     );
-  }
-
-  if (loading) {
-    return <div className="spinner">Verificando...</div>;
   }
 
   return (

@@ -43,7 +43,6 @@ import "dayjs/locale/es";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/componentsux/dashboard/useAuth";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.locale("es");
@@ -53,10 +52,6 @@ interface PageProps {
 }
 
 export default function DetalleSolicitudPage({ params }: PageProps) {
-  const loading = useAuth();
-  if (loading) {
-    return <div className="spinner">Verificando...</div>;
-  }
   const router = useRouter();
   const [solicitud, setSolicitud] = useState<Solicitud | null>(null);
   const [id, setId] = useState<string>("")

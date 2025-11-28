@@ -1,12 +1,13 @@
 "use client"; 
 import { Sidebar, DashboardHeader } from "@/componentsux/dashboard/sidebar";
+import LoadingAuth from "@/componentsux/dashboard/LoadingAuth";
 import { useAuth } from "@/componentsux/dashboard/useAuth";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
    const loading = useAuth();
 
   if (loading) {
-    return <div className="p-6">Verificando sesión...</div>;
+    return <LoadingAuth />;
   }
   return (
     <div className="flex h-screen overflow-hidden">

@@ -6,6 +6,8 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const verificar = async () => {
       try {
         const res = await fetch(
@@ -16,19 +18,25 @@ export const useAuth = () => {
           }
         );
 
+        if (!mounted) return;
+
         if (!res.ok) {
-          router.push("/login");
+          router.replace("/login");
           return;
         }
-      } catch (error) {
-        router.push("/login");
+      } catch {
+        if (mounted) router.replace("/login");
         return;
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     verificar();
+
+    return () => {
+      mounted = false;
+    };
   }, [router]);
 
   return loading;

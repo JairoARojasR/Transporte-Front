@@ -13,7 +13,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatearFecha, formatearHora, formatearDuracion } from "@/componentsux/formatearFecha";
-import { useAuth } from "@/componentsux/dashboard/useAuth";
 import {
   ObtenerPrioridadLabel,
   obtenerPrioridadColor,
@@ -54,7 +53,6 @@ const ESTADOS: { value: Estado; label: string }[] = [
 ];
 
 export default function MisSolicitudesPageSolicitante() {
-  const loading = useAuth();
   
   const {
     data: solicitudes = [],
@@ -94,10 +92,6 @@ export default function MisSolicitudesPageSolicitante() {
         <p className="text-muted-foreground">Cargando tus solicitudes...</p>
       </div>
     );
-  }
-
-  if (loading) {
-    return <div className="spinner">Verificando...</div>;
   }
 
   if (error) {
