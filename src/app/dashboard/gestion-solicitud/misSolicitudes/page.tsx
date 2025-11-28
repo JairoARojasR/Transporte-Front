@@ -343,7 +343,7 @@ const handleRegistrarIncidente = async () => {
               ) : (
                 <div className="space-y-4">
                   {solicitudesEstado.map((solicitud) => (
-                    <Card key={solicitud.id_solicitud} className="p-4 sm:p-6">
+                    <Card key={solicitud.id_solicitud} className="p-4 sm:p-6 mb-6">
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="font-semibold text-lg">
@@ -461,7 +461,7 @@ const handleRegistrarIncidente = async () => {
                             className="flex-1 bg-green-600 hover:bg-green-700"
                           >
                             <CheckCircle className="w-4 h-4 mr-2" />
-                            Aceptar Solicitud
+                            Aceptar Solicitud xd
                           </Button>
                           {/* <Button
                             onClick={() => handleRechazar(solicitud)}
