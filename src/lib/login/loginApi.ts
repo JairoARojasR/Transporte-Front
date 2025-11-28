@@ -19,7 +19,8 @@ export async function iniciarSesion(datos: LoginPayload) {
   const rol = data?.usuario?.id_rol;
   if (rol !== undefined && rol !== null) {
     Cookies.set("user_rol", String(rol), {
-      sameSite: "lax",
+      sameSite: "none",
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     });
   }
