@@ -47,6 +47,7 @@ import {
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
+import { useAuth } from "@/componentsux/dashboard/useAuth";
 
 // Cargar los plugins
 dayjs.extend(utc);
@@ -76,6 +77,7 @@ const ESTADOS: { value: Estado; label: string }[] = [
 ];
 
 export default function MisSolicitudesPage() {
+  const loading = useAuth();
   const {
     data: solicitudes = [],
     isLoading,
@@ -290,6 +292,10 @@ const handleRegistrarIncidente = async () => {
         </div>
       </div>
     );
+  }
+
+  if (loading) {
+    return <div className="spinner">Verificando...</div>;
   }
 
   if (error) {

@@ -15,6 +15,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Truck, MoreVertical, Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/componentsux/dashboard/useAuth";
+
 
 interface JwtPayload {
   sub: string; // cédula
@@ -23,9 +25,10 @@ interface JwtPayload {
   exp?: number;
 }
 export default function GestionVehiculos() {
+  const loading = useAuth();
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
   const [conductor, setConductor] = useState<Vehiculo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isloading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rol, setRol] = useState<number | null>(null);
 
@@ -134,7 +137,7 @@ export default function GestionVehiculos() {
     return `${capacidad} Pasajeros`;
   };
 
-  if (loading) {
+  if (isloading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8 flex items-center justify-center">
         <div className="text-center">
@@ -143,6 +146,10 @@ export default function GestionVehiculos() {
         </div>
       </div>
     );
+  }
+
+   if (loading) {
+    return <div className="spinner">Verificando...</div>;
   }
 
   if (error) {

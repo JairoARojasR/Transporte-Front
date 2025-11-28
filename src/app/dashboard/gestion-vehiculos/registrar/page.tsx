@@ -14,9 +14,11 @@ import { useRouter } from "next/navigation"
 import { Truck, Calendar, Gauge, Users } from "lucide-react"
 import { toast } from "sonner"
 import "@/app/styles/overflow.css"
+import { useAuth } from "@/componentsux/dashboard/useAuth";
 
 
 export default function CrearVehiculoPage() {
+  const loading = useAuth();
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [conductores, setConductores] = useState<DatosUsuario[]>([])
@@ -88,6 +90,21 @@ export default function CrearVehiculoPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isLoadingConductores) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Cargando información...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <div className="spinner">Verificando...</div>;
   }
 
   return (

@@ -38,8 +38,11 @@ import {
   type ConductorAsignado,
 } from "@/lib/vehiculos/vehiculoApi";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/componentsux/dashboard/useAuth";
+
 
 export default function RegistroPreoperacionalPage() {
+  const loading = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
@@ -133,13 +136,17 @@ export default function RegistroPreoperacionalPage() {
     );
   }
 
+  if (loading) {
+    return <div className="spinner">Verificando...</div>;
+  }
+
   return (
     <div className="container mx-auto max-w-4xl p-3 sm:p-3 md:p-5">
       <Card className="mb-10">
         <CardHeader>
           <CardTitle>Registro Preoperacional</CardTitle>
           <CardDescription>
-            Complete el formulario de inspección preoperacional del vehículo actualizado
+            Complete el formulario de inspección preoperacional del vehículo 
           </CardDescription>
         </CardHeader>
         <CardContent>
