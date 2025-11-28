@@ -145,7 +145,7 @@ export default function MisSolicitudesPageSolicitante() {
               ) : (
                 <div className="space-y-4">
                   {solicitudesEstado.map((solicitud) => (
-                    <Card key={solicitud.id_solicitud} className="p-4 sm:p-6">
+                    <Card key={solicitud.id_solicitud} className="p-4 sm:p-6 mb-9">
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="font-semibold text-lg">
